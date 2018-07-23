@@ -1,0 +1,57 @@
+#!/usr/bin/env sh
+
+version() {
+    echo "@ git plugin v0.0.2"
+    echo
+}
+
+usage() {
+    echo "usage: git @ <subcommand> <options>"
+    echo
+    echo "Available subcommands are:"
+    echo "\t- show\t\t "
+    echo "\t- feature\t "
+    echo "\t- task\t\t "
+    echo "\t- label\t\t "
+    echo "\t- save\t\t git @ save <message>"
+    echo "\t- cache\t\t git @ cache"
+    echo "\t- work\t\t git @ work"
+    echo "\t- branch\t git @ branch [--current] [BRANCH_NAME | .]"
+    echo
+}
+
+main() {
+    if [ "$#" -lt 1 ]; then
+        usage; exit 1
+    fi
+
+    local subcommand="$1"; shift
+
+    case $subcommand in
+        "-h"|"--help")
+            usage; exit 0
+            ;;
+        "-v"|"--version")
+            version; exit 0
+            ;;
+        "-a"|"--all"|"a"|"all")
+            git @ info; exit 0
+            ;;
+    esac
+
+    export WORKINGDIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+    if [ ! -e "$WORKINGDIR/git_at_cmds/$subcommand.sh" ]; then
+        usage; exit 1
+    fi
+
+    source "$WORKINGDIR/git_at_cmds/$subcommand.sh"
+
+    local cmdtype=`type -t "cmd_$subcommand"`
+    if [ $cmdtype != 'function' ]; then
+        usage; exit 1
+    fi
+
+    cmd_$subcommand "$@"
+}
+
+main "$@"
