@@ -16,8 +16,7 @@ cmd_work() {
     fi
 
     if [ ! `git branch --list $branch` ]; then
-        git branch $branch
-        exit 1;
+        git branch $branch;
     fi;
 
     git checkout $branch
