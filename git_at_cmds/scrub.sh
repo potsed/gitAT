@@ -1,10 +1,10 @@
 usage() {
-    echo 'Usage: git @ lint /path/to/lint/relative/to/app/root'
-    echo 'Set the lint tool: git @ lint -t [/path/to/tool in relation to app root eg: /vendor/squizlabs/php_codesniffer/bin/phpcs]'
+    echo 'Usage: git @ scrub /path/to/scrub/relative/to/app/root'
+    echo 'Set the scrub tool: git @ scrub -t [/path/to/tool in relation to app root eg: /vendor/squizlabs/php_codesniffer/bin/phpcbf]'
     exit 1
 }
 
-cmd_lint() {
+cmd_scrub() {
     if [ "$#" -lt 1 ]; then
         usage; exit 1;
     elif [ "$#" -lt 2 ]; then
@@ -16,7 +16,7 @@ cmd_lint() {
                 usage; exit 0
                 ;;
             *)
-                run_linter $1; exit 0
+                run_scrubber $1; exit 0
                 ;;
         esac
     else
@@ -32,8 +32,8 @@ cmd_lint() {
     usage; exit 1
 }
 
-run_linter() {
-    local theTOOL=`git config at.linter`
+run_scrubber() {
+    local theTOOL=`git config at.scrubber`
     local thePWD=`pwd`
     local root=`git @ root`
     # local message="$@ - "`git @ label`
@@ -42,19 +42,19 @@ run_linter() {
 
     thePATH="$root$1";
     theCMD="$root$theTOOL"
-    echo "Linting: $thePATH";
+    echo "Scrubbing: $thePATH";
     $theCMD $thePATH;
     exit 1;
 }
 
 set_tool() {
-    `git config --replace-all at.linter $1`
-    echo 'Lint tool updated'
+    `git config --replace-all at.scrubber $1`
+    echo 'Scrub tool updated'
     show_tool; exit 1
 }
 
 show_tool() {
-    echo "Current Lint Tool "`git config at.linter`
+    echo "Current Scrub Tool "`git config at.scrubber`
     echo
     exit 1
 }

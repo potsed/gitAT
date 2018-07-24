@@ -1,5 +1,8 @@
 usage() {
-    echo
+    echo "View current tag: git @ tag"
+    echo "Increase tag number: git @ tag +"
+    echo "Decrease tag number: git @ tag -"
+    echo "Show this help: git @ tag -h"
     exit 1
 }
 
@@ -11,8 +14,11 @@ cmd_tag() {
             "-h"|"--help"|"help"|"h")
                 usage; exit 0
                 ;;
-            "-i"|"--inc"|"+"|"inc")
-                set_tag; exit 0
+            "-a"|"--add"|"+"|"add"|"up")
+                add_tag; exit 0
+                ;;
+            "-s"|"--sub"|"-"|"sub"|"down")
+                sub_tag; exit 0
                 ;;
         esac
     fi
@@ -20,10 +26,23 @@ cmd_tag() {
     usage; exit 1
 }
 
-set_tag() {
+add_tag() {
     OLDVER=`git @ tag`
     OLDTAG=`git config at.tag`
     NEWTAG=$(($OLDTAG + 1))
+    `git config --replace-all at.tag $NEWTAG`
+    echo $OLDVER 'updated to '`git @ tag`
+    exit 1
+}
+
+sub_tag() {
+    OLDVER=`git @ tag`;
+    OLDTAG=`git config at.tag`;
+    if [ $OLDTAG -gt 0 ]; then
+        NEWTAG=$(($OLDTAG - 1));
+    else
+        NEWTAG=0;
+    fi
     `git config --replace-all at.tag $NEWTAG`
     echo $OLDVER 'updated to '`git @ tag`
     exit 1

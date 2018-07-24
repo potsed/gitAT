@@ -1,5 +1,8 @@
 usage() {
-    echo
+    echo "View current version: git @ version"
+    echo "Set major version Number: git @ version -M 1"
+    echo "Set minor version Number: git @ version -m 1"
+    echo "Show this help: git @ version -h"
     exit 1
 }
 
