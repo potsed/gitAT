@@ -26,7 +26,11 @@ save_work() {
 
     local thePWD=`pwd`
     local root=`git @ root`
-    local message=`git @ label` "$1"
+    local message=`git @ label`
+
+    if [ "$#" -eq 1 ]; then
+        message="$1 $message";
+    fi
 
     cd $root
     git add . && git cz -m \""$message\""
