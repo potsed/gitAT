@@ -8,10 +8,10 @@ cmd_label() {
         show_label; exit 0
     elif [ "$#" -eq 1 ]; then
         if [ "$1" == "help" ]; then
-            usage; exit 0
+            usage; return;
         fi
 
-        set_label "$@"; exit 0
+        set_label "$@"; return;
     fi
 
     usage;
