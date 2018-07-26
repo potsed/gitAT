@@ -28,7 +28,7 @@ save_work() {
     local root=`git @ root`
 
     if [ "$#" -eq 1 ]; then
-        `git @ label` "$1"
+        `git @ label "$1"`
     fi
 
     local message=`git @ label`
