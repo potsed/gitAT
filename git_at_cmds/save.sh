@@ -26,7 +26,7 @@ save_work() {
 
     local thePWD=`pwd`
     local root=`git @ root`
-    local message=`git @ label` $1
+    local message=`git @ label` $@
 
     cd $root
     git add . && git cz -m \""$message\""
