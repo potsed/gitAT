@@ -29,7 +29,7 @@ save_work() {
     local message=`git @ label`
 
     if [ "$#" -eq 1 ]; then
-        message="$1 $message";
+        message=$1;
     fi
 
     cd $root
