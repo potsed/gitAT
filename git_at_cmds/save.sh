@@ -1,5 +1,5 @@
 usage() {
-    echo 'Usage: git @ save "Your commit message"'
+    echo 'Usage: git @ save'
     exit 1
 }
 
@@ -10,9 +10,9 @@ cmd_save() {
                 usage; exit 0
                 ;;
         esac
-        save_work $@; exit 0
+        exit 0
     fi
-    usage; exit 1
+    save_work $@; exit 0
 }
 
 save_work() {
@@ -27,7 +27,12 @@ save_work() {
 
     local thePWD=`pwd`
     local root=`git @ root`
-    local message="$@ - "`git @ label`
+    local message=`git @ label`
+
+    if ! hash `git cz` 2>/dev/null
+    then
+        echo "'some_exec' was not found in PATH"
+    fi
 
     cd $root
     git add . && git cz -m \""$message\""
