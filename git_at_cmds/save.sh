@@ -10,7 +10,6 @@ cmd_save() {
                 usage; exit 0
                 ;;
         esac
-        exit 0
     fi
     save_work $@; exit 0
 }
@@ -27,7 +26,7 @@ save_work() {
 
     local thePWD=`pwd`
     local root=`git @ root`
-    local message=`git @ label`
+    local message=`git @ label` $1
 
     cd $root
     git add . && git cz -m \""$message\""
