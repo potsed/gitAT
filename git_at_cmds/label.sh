@@ -21,7 +21,7 @@ set_label() {
     `git config --replace-all at.label "$@ "`
 
     echo 'Label updated to: '`git @ label`
-    exit 1
+    return;
 }
 
 show_label() {
@@ -30,5 +30,5 @@ show_label() {
 
 
     echo $userLabel"(S"`git @ sprint`".F"`git @ feature`".T"`git @ task`")"
-    exit 1
+    return;
 }
