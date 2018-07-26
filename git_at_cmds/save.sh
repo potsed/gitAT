@@ -17,9 +17,15 @@ cmd_save() {
 save_work() {
     local current=`git @ branch -c`
     local branch=`git @ branch`
+
+    if [ "$current" == "master" ]; then
+        echo 'Oops, cannot save changes on master create a new branch instead!'
+        echo
+        exit 1;
+    fi
+
     if [ "$current" != "$branch" ]; then
-        echo 'Oops, cannot save changes.'
-        echo "You don't appear to be on branch $branch"
+        echo "Oops cannot save the changes, you're not on the correct working branch $branch"
         echo
         exit 1;
     fi
