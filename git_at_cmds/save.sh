@@ -29,11 +29,6 @@ save_work() {
     local root=`git @ root`
     local message=`git @ label`
 
-    if ! hash `git cz` 2>/dev/null
-    then
-        echo "'some_exec' was not found in PATH"
-    fi
-
     cd $root
     git add . && git cz -m \""$message\""
     cd $thePWD
