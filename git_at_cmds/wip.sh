@@ -14,8 +14,8 @@ cmd_wip() {
             "-s"|"--set"|"s"|"set")
                 set_wip; exit 0
                 ;;
-            "-c"|"--current"|"c"|"current")
-                show_wip; exit 0
+            "-c"|"--checkout"|"c"|"checkout")
+                checkout_wip; exit 0
                 ;;
         esac
     fi
@@ -39,4 +39,8 @@ set_wip() {
 
 show_wip() {
     echo "Current WIP is: "`git config at.wip`
+}
+
+checkout_wip() {
+    git checkout `git @ wip`
 }
