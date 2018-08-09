@@ -42,5 +42,6 @@ show_wip() {
 }
 
 checkout_wip() {
-    git checkout `git @ wip`
+    from=`git config at.wip`
+    git checkout $from
 }
