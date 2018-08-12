@@ -44,5 +44,5 @@ show_branch() {
 }
 
 delete_merged_branches_locally() {
-    `git branch --merged | grep -v '\*\|master\|dev|develop' | xargs -n 1 git branch -d`
+    git branch --merged | grep -v '\*\|master\|dev|develop' | xargs -n 1 git branch -d
 }

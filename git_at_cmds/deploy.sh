@@ -1,17 +1,21 @@
 usage() {
-    echo 'Usage: git @ save'
+    echo 'Usage: git @ deploy'
     exit 1
 }
 
-cmd_save() {
-    if [ "$#" -eq 1 ]; then
-        case $1 in
-            "-h"|"--help"|"help"|"h")
-                usage; exit 0
+# npm run production; `git @ tag +`; git tag `git @ tag`; git @ save 'Deploying '`git @ tag`; git push; echo 'Deploying '`git @ tag`; eb deploy
+
+cmd_deploy() {
+    PS3='Deploy using: '
+    options=("EB")
+    select opt in "${options[@]}"
+    do
+        case $opt in
+            "EB")
+                DEPLOY_SCRIPT="eb deploy"
                 ;;
         esac
-    fi
-    save_work $@; exit 0
+    done
 }
 
 save_work() {
@@ -24,12 +28,7 @@ save_work() {
         exit 1;
     fi
 
-    if [ "$current" == "prod" ]; then
-        read -p "Are you sure you want to commit this? (Y/N): " CONFIRMATION && [[ $CONFIRMATION == [yY] || $CONFIRMATION == [yY][eE][sS] ]] || exit 1;
-        git @ tag +
-        git tag `git @ tag`
-
-    elif [ "$current" != "$branch" ]; then
+    if [ "$current" != "$branch" ]; then
         echo "Oops cannot save the changes, you're not on the correct working branch $branch"
         echo
         exit 1;

@@ -1,5 +1,29 @@
 usage() {
-    echo
+    cat << 'EOF'
+          __
+       __/\ \__          __                    __
+   __ /\_\ \ ,_\        /'_`\_      __  __  __/\_\  _____
+ /'_ `\/\ \ \ \/       /'/'_` \    /\ \/\ \/\ \/\ \/\ '__`\
+/\ \L\ \ \ \ \ \_     /\ \ \L\ \   \ \ \_/ \_/ \ \ \ \ \L\ \
+\ \____ \ \_\ \__\    \ \ `\__,_\   \ \___x___/'\ \_\ \ ,__/
+ \/___L\ \/_/\/__/     \ `\_____\    \/__//__/   \/_/\ \ \/
+   /\____/              `\/_____/                     \ \_\
+   \_/__/
+
+Usage:
+---------
+git @ wip [<options>]
+
+Without options, echo out the current branch stored as a work in progress.
+
+Options:
+---------
+    --help|-h           Show this help screen
+    --set|-s            Sets the current `git @ branch` to the wip
+    --checkout|-c       Checks out the wip branch
+    --restore|-r        Restores the wip branch to the primary `git @ branch`
+
+EOF
     exit 1
 }
 
@@ -45,3 +69,4 @@ checkout_wip() {
     from=`git config at.wip`
     git checkout $from
 }
+

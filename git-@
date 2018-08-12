@@ -1,39 +1,96 @@
 #!/usr/bin/env sh
 
 version() {
-    echo "@ git plugin v0.0.2"
+    echo "@ git plugin v0.1.0"
     echo
 }
 
 usage() {
     cat << 'EOF'
 
- .----------------.  .----------------.  .----------------.   .----------------.
-| .--------------. || .--------------. || .--------------. | | .--------------. |
-| |    ______    | || |     _____    | || |  _________   | | | |     ____     | |
-| |  .' ___  |   | || |    |_   _|   | || | |  _   _  |  | | | |   .' __ \    | |
-| | / .'   \_|   | || |      | |     | || | |_/ | | \_|  | | | |  / .'  \ |   | |
-| | | |    ____  | || |      | |     | || |     | |      | | | |  | | (_/ |   | |
-| | \ `.___]  _| | || |     _| |_    | || |    _| |_     | | | |  \ `.__.'\   | |
-| |  `._____.'   | || |    |_____|   | || |   |_____|    | | | |   `.___ .'   | |
-| |              | || |              | || |              | | | |              | |
-| '--------------' || '--------------' || '--------------' | | '--------------' |
- '----------------'  '----------------'  '----------------'   '----------------'
+          __
+       __/\ \__          __
+   __ /\_\ \ ,_\        /'_`\_
+ /'_ `\/\ \ \ \/       /'/'_` \
+/\ \L\ \ \ \ \ \_     /\ \ \L\ \
+\ \____ \ \_\ \__\    \ \ `\__,_\
+ \/___L\ \/_/\/__/     \ `\_____\
+   /\____/              `\/_____/
+   \_/__/
+
+
+Usage:
+-------------------
+git @ <subcommand> [<options>]
+
+Use `git @ <subcommand> --help` for details about each command.
+
+Subcommands:
+-------------------
+branch (git @ branch <options>)
+    - Stores a handle to the current working branch for easy navigation
+    - Cleans up completed and merged branches
+
+changes (git @ changes)
+    - Displays a list of files with any changes
+
+feature (git @ feature <options> [<feature>])
+    - Sets and gets the feature you're working on for a sprint
+
+id
+    - Gets a string made up of the version, major, and minor versions
+
+info
+    - Show the result of many of the `git @` commands in an info panel
+
+label
+    - A label in the format of (S.F.T) standing for Sprint, Feature, Task
+
+lint
+    - Set your linting tool, and run linting over your changed files only
+
+logs
+    - Show the last 10 lines of logs in pretty format
+
+root
+    - Returns the path to your project root
+
+save
+    - Same as running `git add .; git commit -m;` but also checks you're in
+      the correct path.
+
+scrub
+    - Similar to lint, except this also runs the auto beautifier like phpcbf
+
+sprint
+    - set and get the sprint you're working on
+
+start
+    - Start a toggl timer
+
+stop
+    - Stop a toggl timer
+
+
+tag
+
+
+task
+
+
+toggl
+
+
+version
+
+
+wip
+
+
+work
+
 
 EOF
-
-    echo "usage: git @ <subcommand> <options>"
-    echo
-    echo "Available subcommands are:"
-    echo "\t- show\t\t "
-    echo "\t- feature\t "
-    echo "\t- task\t\t "
-    echo "\t- label\t\t "
-    echo "\t- save\t\t git @ save <message>"
-    echo "\t- cache\t\t git @ cache"
-    echo "\t- work\t\t git @ work"
-    echo "\t- branch\t git @ branch [--current] [BRANCH_NAME | .]"
-    echo
 }
 
 main() {
