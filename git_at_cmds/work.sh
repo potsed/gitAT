@@ -28,20 +28,31 @@ cmd_work() {
         exit 1;
     fi
 
+    echo 'Stashing Changes'
+    git stash;
+
     if [ ! `git branch --list $branch` ]; then
-        AUTOSTASH=1
-        git stash;
+        echo 'Switching to and updating master branch'
+        git checkout master;
+        git fetch;
+        git pull;
+
+        echo 'Switching to and updating develop branch'
         git checkout develop;
         git pull;
+
+        echo 'Rebasing develop branch with master'
         git rebase master;
+
+        echo 'Creating local branch from updated dev branch'
         git branch $branch;
     fi;
 
+    echo 'Switching to local branch'
     git checkout $branch
 
-    if [ "$AUTOSTASH" == 1 ]; then
-        git stash pop
-    fi;
-    # git @ start
+    echo 'Reapplying stashed changes'
+    git stash pop
+
     exit 1;
 }
