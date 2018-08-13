@@ -23,9 +23,9 @@ Usage:
 -------------------
 git @ <subcommand> [<options>]
 
-Use `git @ <subcommand> --help` for details about each command.
+Most subcommands have help @ `git @ <subcommand> --help` for more details.
 
-Subcommands:
+Available Subcommands:
 -------------------
 branch (git @ branch <options>)
     - Stores a handle to the current working branch for easy navigation
@@ -71,24 +71,24 @@ start
 stop
     - Stop a toggl timer
 
-
 tag
-
+    - set the minor version og the code, this is not related to git tag
 
 task
-
+    - Set the task you're currently working on as part of the sprint workflow
 
 toggl
-
+    - Link to toggl timer
 
 version
-
+    - Show a version string vM.m.t
 
 wip
-
+    - Set the current branch as a work in progress so that you can work on
+      something else and come back to it later
 
 work
-
+    - Switch to the current working branch
 
 EOF
 }
