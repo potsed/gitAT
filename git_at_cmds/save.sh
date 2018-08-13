@@ -24,6 +24,12 @@ save_work() {
         exit 1;
     fi
 
+    if [ "$current" == "develop" ]; then
+        echo 'Oops, cannot save changes on develop create a new branch instead!'
+        echo
+        exit 1;
+    fi
+
     if [ "$current" == "prod" ]; then
         read -p "Are you sure you want to commit this? (Y/N): " CONFIRMATION && [[ $CONFIRMATION == [yY] || $CONFIRMATION == [yY][eE][sS] ]] || exit 1;
         git @ tag +
