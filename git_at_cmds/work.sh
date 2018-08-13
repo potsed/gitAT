@@ -33,6 +33,7 @@ cmd_work() {
         git stash;
         git checkout develop;
         git pull;
+        git rebase master;
         git branch $branch;
     fi;
 
