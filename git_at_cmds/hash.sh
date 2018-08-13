@@ -47,6 +47,4 @@ cmd_hash() {
         echo "CURRENT is ${LOC_BR_BEHIND_REM_DEVELOP} behind and ${LOC_BR_BEHIND_REM_DEVELOP} ahead of origin/master"
     fi
     echo
-
-    exit 1
 }
