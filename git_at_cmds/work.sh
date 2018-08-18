@@ -31,6 +31,8 @@ cmd_work() {
     echo 'Stashing Changes'
     git stash;
 
+    local HAS_STASH=`git stash list | grep 'test' | wc -l | tr -d ' '`
+
     if [ ! `git branch --list $branch` ]; then
         echo 'Switching to and updating master branch'
         git checkout master;
@@ -52,7 +54,9 @@ cmd_work() {
     git checkout $branch
 
     echo 'Reapplying stashed changes'
-    git stash pop
+    if [ "$HAS_STASH" == "1" ]; then
+        git stash pop;
+    fi;
 
     exit 1;
 }
