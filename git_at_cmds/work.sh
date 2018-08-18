@@ -13,14 +13,14 @@ usage() {
 
 EOF
     echo 'Usage: git @ work'
-    exit 1
+    exit 0
 }
 
 cmd_work() {
-    git fetch
     # git @ stop
     local current=`git @ branch -c`
     local branch=`git @ branch`
+    local STASHKEY='autostash-work-branch'
     if [ "$current" == "$branch" ]; then
         # git @ start
         echo "You're already in the working branch"
@@ -28,23 +28,19 @@ cmd_work() {
         exit 1;
     fi
 
+    echo 'Fetching branches'
+    git fetch;
+
     echo 'Stashing Changes'
-    git stash;
+    git stash -m $STASHKEY;
 
     local HAS_STASH=`git stash list | grep 'test' | wc -l | tr -d ' '`
 
     if [ ! `git branch --list $branch` ]; then
-        echo 'Switching to and updating master branch'
-        git checkout master;
-        git fetch;
-        git pull;
 
         echo 'Switching to and updating develop branch'
         git checkout develop;
         git pull;
-
-        echo 'Rebasing develop branch with master'
-        git rebase master;
 
         echo 'Creating local branch from updated dev branch'
         git branch $branch;
