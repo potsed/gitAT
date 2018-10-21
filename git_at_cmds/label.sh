@@ -27,6 +27,6 @@ set_label() {
 show_label() {
     userLabel=`git config at.label`
 
-    echo $userLabel"(S"`git @ sprint`".F"`git @ feature`".T"`git @ task`")"
+    echo $userLabel"[P: "`git @ project`" F: "`git @ feature`" T: "`git @ task`" B: "`git @ branch`"]"
     return;
 }
