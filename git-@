@@ -35,7 +35,7 @@ changes (git @ changes)
     - Displays a list of files with any changes
 
 feature (git @ feature <options> [<feature>])
-    - Sets and gets the feature you're working on for a sprint
+    - Sets and gets the feature you're working on for a project
 
 id
     - Gets a string made up of the version, major, and minor versions
@@ -44,7 +44,7 @@ info
     - Show the result of many of the `git @` commands in an info panel
 
 label
-    - A label in the format of (S.F.T) standing for Sprint, Feature, Task
+    - A label in the format of (S.F.T) standing for Project, Feature, Task
 
 lint
     - Set your linting tool, and run linting over your changed files only
@@ -62,8 +62,8 @@ save
 scrub
     - Similar to lint, except this also runs the auto beautifier like phpcbf
 
-sprint
-    - set and get the sprint you're working on
+project
+    - set and get the project you're working on
 
 start
     - Start a toggl timer
@@ -75,7 +75,7 @@ tag
     - set the minor version og the code, this is not related to git tag
 
 task
-    - Set the task you're currently working on as part of the sprint workflow
+    - Set the task you're currently working on as part of the project workflow
 
 toggl
     - Link to toggl timer
@@ -114,7 +114,7 @@ main() {
 
     export WORKINGDIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
     if [ ! -e "$WORKINGDIR/git_at_cmds/$subcommand.sh" ]; then
-        usage; exit 1
+        git $subcommand "$@"; exit 1
     fi
 
     source "$WORKINGDIR/git_at_cmds/$subcommand.sh"

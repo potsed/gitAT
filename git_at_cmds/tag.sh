@@ -30,8 +30,8 @@ add_tag() {
     OLDVER=`git @ tag`
     OLDTAG=`git config at.tag`
     NEWTAG=$(($OLDTAG + 1))
-    `git config --replace-all at.tag $NEWTAG`
-    echo $OLDVER 'updated to '`git @ tag`
+    git config --replace-all at.tag ${NEWTAG}
+    echo ${OLDVER} 'updated to '`git @ tag`
     exit 1
 }
 
