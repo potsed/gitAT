@@ -1,4 +1,4 @@
-cmd_show() {
+cmd_info() {
     echo "git @ project: "`git @ project`
     echo "git @ feature: "`git @ feature`
     echo "git @ task: "`git @ task`

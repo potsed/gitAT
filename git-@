@@ -8,25 +8,21 @@ version() {
 usage() {
     cat << 'EOF'
 
-          __
-       __/\ \__          __
-   __ /\_\ \ ,_\        /'_`\_
- /'_ `\/\ \ \ \/       /'/'_` \
-/\ \L\ \ \ \ \ \_     /\ \ \L\ \
-\ \____ \ \_\ \__\    \ \ `\__,_\
- \/___L\ \/_/\/__/     \ `\_____\
-   /\____/              `\/_____/
-   \_/__/
+  __ _(_) |_      / __ \
+ / _` | | __|    / / _` |
+| (_| | | |_    | | (_| |
+ \__, |_|\__|    \ \__,_|
+ |___/            \____/
 
 
 Usage:
--------------------
+--------------------------------------------------------------------------------
 git @ <subcommand> [<options>]
 
 Most subcommands have help @ `git @ <subcommand> --help` for more details.
 
 Available Subcommands:
--------------------
+--------------------------------------------------------------------------------
 branch (git @ branch <options>)
     - Stores a handle to the current working branch for easy navigation
     - Cleans up completed and merged branches
