@@ -54,6 +54,7 @@ logs
 
 path
     - Returns your project root path
+      Runs: `git rev-parse --show-toplevel`
 
 root
     - Runs: `git stash push --include-untracked -m "switched-to-${BASE}"`
