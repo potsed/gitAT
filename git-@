@@ -78,6 +78,10 @@ start
 stop
     - Stop a toggl timer
 
+squash (git @ squash branch)
+    - SOFT resets the commits of the current branch to the HEAD of the given BRANCH
+    - Runs: 
+
 tag
     - set the minor version og the code, this is not related to git tag
 
