@@ -50,7 +50,7 @@ save_work() {
     local message=`git @ label`
 
     cd $root
-    git add . && git cz -m \""$message\""
+    git add -p && git cz -m \""$message\""
     cd $thePWD
     exit 1;
 }

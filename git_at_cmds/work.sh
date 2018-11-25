@@ -51,8 +51,8 @@ cmd_work() {
 
     if [ ! `git branch --list $branch` ]; then
 
-        echo 'Switching to and updating develop branch'
-        git checkout develop;
+        echo 'Switching to and updating base branch'
+        git checkout "$(git @ base)";
         git pull;
 
         echo 'Creating local branch from updated dev branch'

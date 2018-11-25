@@ -1,3 +1,10 @@
 cmd_root() {
-    git rev-parse --show-toplevel
+    local current="$(git @ branch -c)"
+    local base="$(git @ base)"
+
+    if [ "$current" != "${base}" ]; then
+        git stash push --include-untracked -m "switched-to-${base}"
+        git checkout ${base};
+        git pull --rebase
+    fi
 }

@@ -23,6 +23,10 @@ Most subcommands have help @ `git @ <subcommand> --help` for more details.
 
 Available Subcommands:
 --------------------------------------------------------------------------------
+base (git @ base [<branch>])
+    - Sets the base working branch for you current project making it easy
+      to switch between
+
 branch (git @ branch <options>)
     - Stores a handle to the current working branch for easy navigation
     - Cleans up completed and merged branches
@@ -48,8 +52,14 @@ lint
 logs
     - Show the last 10 lines of logs in pretty format
 
+path
+    - Returns your project root path
+
 root
-    - Returns the path to your project root
+    - Runs: `git stash push --include-untracked -m "switched-to-${BASE}"`
+            `git checkout ${BASE}` # Set with `git @ base <branch>`
+            `git pull --rebase`
+    NB. This does not reapply your stash
 
 save
     - Same as running `git add .; git commit -m;` but also checks you're in
