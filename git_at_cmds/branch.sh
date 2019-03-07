@@ -33,7 +33,7 @@ current_branch() {
 
 set_branch() {
     from=`git @ branch`
-    `git config --replace-all at.branch $1`
+    git config --replace-all at.branch $1
     echo 'Branch updated to '`git @ branch`" from $from"
     exit 1
 }

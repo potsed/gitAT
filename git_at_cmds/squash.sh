@@ -21,10 +21,27 @@ Description:
   NB. You may have to force push your branch to the repo after squashing the
   commits, if on a shared branch this may not be best option.
 
+  Why is it useful?
+  ----------------------
+  When you have been commiting locally for a period of time working on one
+  feature, then you may wish to clean up the repo before pushing it for PR
+
 Options:
 --------------------------------------------------------------------------------
   --help|-h           Show this help screen
   --save|-s           Run `git @ save` after squashing
+
+GIT Commands Used
+--------------------------------------------------------------------------------
+  For transparency and education purposes I like to disclose the underlying
+  git commands being run during this operation.
+
+  01. Retrieve the HEAD SHA of the given branch
+      CMD: `git rev-parse --verify --quiet --long ${BRANCH}`
+
+  02. Resets the current branch to the SHA of the given branch without losing
+      any of the work you have done since that SHA
+      CMD: `git reset --soft ${SHA}`
 
 EOF
     exit 1
@@ -62,7 +79,7 @@ cmd_squash() {
 }
 
 head() {
-    local HEAD=$(git rev-parse --verify --quiet --short "$1");
+    local HEAD=$(git rev-parse --verify --quiet --long "$1");
     if [ "${HEAD}" != "" ]; then
         echo ${HEAD};
     else
