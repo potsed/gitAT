@@ -30,25 +30,21 @@ cmd_initlocal() {
 
 set_remote() {
     git init;
-    git @ project $1
+    git add .;
+    git commit -m "Initial commit";
 
-    local ORIGIN=git@gitlab.com:squibler/$(git @ project).git
-
-    git remote add origin $ORIGIN
-
-    git add .
-    git commit -m "Initial commit"
+    git @ project $1;
     git @ version -r;
-    git push --set-upstream origin master;
-
     git @ version -f;
-    git tag $(git @ tag);
+    git remote add origin git@gitlab.com:squibler/$(git @ project).git;
 
     # Now create the rest of the structure MASTER -> STAGING -> DEVELOP
-    git checkout -b staging
+    git push --set-upstream origin master;
+
+    git checkout -b staging;
     git push --set-upstream origin staging;
 
-    git checkout -b develop
+    git checkout -b develop;
     git push --set-upstream origin develop;
 
     next_step;
