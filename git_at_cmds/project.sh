@@ -14,17 +14,16 @@ cmd_project() {
         set_project "$@"; exit 0
     fi
 
-    usage; exit 1
+    usage; exit 0
 }
 
 set_project() {
-    from=`git @ project`
     git config --replace-all at.project "$@"
-    echo 'project updated to: '`git @ project`" from $from"
-    exit 1
+    echo 'project updated to: '$(git @ project);
+    exit 0
 }
 
 show_project() {
-    echo `git config at.project`
-    exit 1
+    echo $(git config at.project);
+    exit 0
 }

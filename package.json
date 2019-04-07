@@ -1,0 +1,24 @@
+{
+  "name": "gitat",
+  "version": "1.0.0",
+  "description": "Some helper commands for git",
+  "main": "git-@",
+  "scripts": {
+    "info": "git @"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/potsed/gitAT.git"
+  },
+  "keywords": [
+    "Git",
+    "Bash",
+    "Helpers"
+  ],
+  "author": "Daniel S <potsed@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/potsed/gitAT/issues"
+  },
+  "homepage": "https://github.com/potsed/gitAT#readme"
+}
