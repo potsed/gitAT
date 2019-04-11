@@ -51,24 +51,29 @@ release() {
         exit 0;
     fi
 
-    git add .;
 
+
+    git add .;
     local GIT_STASH_REF=$(git stash create "RELEASE_AUTOSTASH");
 
     if [ -z "${GIT_STASH_REF}" ]; then
         echo "Nothing to stash...";
     else
         # echo the stash commit. Useful if your script terminates unexpectedly
-        echo "GIT_STASH_REF created ${GIT_STASH_REF} ...";
+        echo "GIT_STASH_REF created ${GIT_STASH_REF}...";
     fi
 
     git reset --hard;
-    git checkout master;
+
+    if [[ "master" != "${CURRENT_BRANCH}" ]]; then
+        git checkout master;
+    fi
+
     git pull;
 
     if [[ $RELEASE_TYPE == 1 ]]; then
         git @ version -M;
-        local MSG="Major Release";
+        local MSG="Major Release - Breaking Changes";
     elif [[ $RELEASE_TYPE == 2 ]]; then
         git @ version -m;
         local MSG="Minor Release";
@@ -82,7 +87,10 @@ release() {
 
     git tag -a $(git @ tag) -m $MSG;
     git push origin master --tags;
-    git checkout $CURRENT_BRANCH;
+
+    if [[ "master" != "${CURRENT_BRANCH}" ]]; then
+        git checkout $CURRENT_BRANCH;
+    fi
 
     if [ -n "${GIT_STASH_REF}" ] ; then
         git stash apply ${GIT_STASH_REF}
