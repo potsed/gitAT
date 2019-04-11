@@ -32,17 +32,20 @@ set_remote() {
     git init;
     git add .;
     git commit -m "Initial commit";
+    sleep 5;
 
-    git @ project $1;
+    git @ project "$1";
     git @ version -r;
-    git @ version -f;
     git remote add origin git@gitlab.com:squibler/$(git @ project).git;
+    sleep 5;
 
     # Now create the rest of the structure MASTER -> STAGING -> DEVELOP
     git push --set-upstream origin master;
+    sleep 5;
 
     git checkout -b staging;
     git push --set-upstream origin staging;
+    sleep 5;
 
     git checkout -b develop;
     git push --set-upstream origin develop;
