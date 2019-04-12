@@ -51,8 +51,6 @@ release() {
         exit 0;
     fi
 
-
-
     git add .;
     local GIT_STASH_REF=$(git stash create "RELEASE_AUTOSTASH");
 
