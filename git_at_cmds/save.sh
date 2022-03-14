@@ -18,14 +18,8 @@ save_work() {
     local current=`git @ branch -c`
     local branch=`git @ branch`
 
-    if [ "$current" == "master" ]; then
-        echo 'Oops, cannot save changes on master create a new branch instead!'
-        echo
-        exit 1;
-    fi
-
-    if [ "$current" == "develop" ]; then
-        echo 'Oops, cannot save changes on develop create a new branch instead!'
+    if [ "$current" == "master" ] || [ "$current" == "develop" ]; then
+        echo "Oops, cannot save changes on ${current} create a new branch instead!"
         echo
         exit 1;
     fi
@@ -46,10 +40,10 @@ save_work() {
     fi
 
     local thePWD=`pwd`
-    local root=`git @ root`
+    local path=`git @ _path`
     local message=`git @ label`
 
-    cd $root
+    cd $path
     git add -p && git cz -m \""$message\""
     cd $thePWD
     exit 1;
