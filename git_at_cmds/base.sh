@@ -25,6 +25,11 @@ set_base() {
 }
 
 show_base() {
-    echo `git config at.base`
+    current=`git config at.base`
+    if [ $current == "" ]; then
+        current=`git branch -rl "*/HEAD" | rev | cut -d/ -f1 | rev`
+        set_base $current
+    fi
+    echo $current
     exit 1
 }

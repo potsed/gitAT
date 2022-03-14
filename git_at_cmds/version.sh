@@ -4,6 +4,7 @@ usage() {
     echo "Increment minor version Number: git @ version -m 1"
     echo "Increment fix version Number: git @ version -f 1"
     echo "Show this help: git @ version -h"
+    echo "DO NOT MISUSE: Reset the version to 0.0.0: git @ version -r"
     exit 0
 }
 
@@ -16,17 +17,21 @@ cmd_version() {
         case "${flag}" in
             h) usage; exit 0 ;;
             r) reset_version; exit 0 ;;
-            M) local INC=1 ;;
-            m) local INC=2 ;;
-            f) local INC=3 ;;
+            M) local MAJOR=true ;;
+            m) local MINOR=true ;;
+            f) local FIX=true ;;
         esac
     done
 
-    if [[ $INC == 1 ]]; then
+    if [[ $MAJOR ]]; then
         increment_major;
-    elif [[ $INC == 2 ]]; then
+    fi
+
+    if [[ $MINOR ]]; then
         increment_minor;
-    elif [[ $INC == 3 ]]; then
+    fi
+
+    if [[ $FIX ]]; then
         increment_fix;
     fi
 

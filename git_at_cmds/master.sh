@@ -1,8 +1,9 @@
 cmd_master() {
     local current="$(git @ branch -c)"
-    if [ "$current" != "master" ]; then
+    local base="$(git @ base)"
+    if [ "$current" != "$base" ]; then
         git stash push --include-untracked -m "switched-to-master"
-        git checkout master;
+        git checkout $base;
         git pull
     fi
 }

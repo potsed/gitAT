@@ -1,3 +1,3 @@
-cmd_path() {
+cmd__path() {
     git rev-parse --show-toplevel
 }

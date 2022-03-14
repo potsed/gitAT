@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 version() {
-    echo "@ git plugin v0.1.0"
+    echo "@ git plugin v1.0.1"
     echo
 }
 
@@ -80,7 +80,7 @@ stop
 
 squash (git @ squash branch)
     - SOFT resets the commits of the current branch to the HEAD of the given BRANCH
-    - Runs: 
+    - Runs:
 
 tag
     - set the minor version og the code, this is not related to git tag

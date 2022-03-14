@@ -2,7 +2,7 @@ cmd_ignore() {
      if [ "$#" -lt 1 ]; then
         usage; exit 0
     elif [ "$#" -eq 1 ]; then
-        local REPOPATH=$(git @ path)"/.gitignore";
+        local REPOPATH=$(git @ _path)"/.gitignore";
         if grep -Fxq "$1" $REPOPATH; then
             echo "String $1 exists in $REPOPATH";
         else
