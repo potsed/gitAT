@@ -56,7 +56,7 @@ restore_wip() {
 
 set_wip() {
     from=`git config at.wip`
-    branch=`git @ branch`
+    branch=`git @ branch -c`
     `git config --replace-all at.wip $branch`
     echo "wip updated to $branch from $from"
 }

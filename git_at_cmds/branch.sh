@@ -17,17 +17,18 @@ cmd_branch() {
             "-c"|"--current"|"c"|"current")
                 current_branch; exit 0
                 ;;
-            "-s"|"--sweep"|"s"|"sweep")
-                delete_merged_branches_locally; exit 0
-                ;;
-            ".")
-                set_branch `git @ branch --current`
+            "-s"|"--set"|"s"|"set"|".")
+                set_branch `git branch --show-current`
                 ;;
         esac
         set_branch $1; exit 0
     fi
 
     usage; exit 1
+}
+
+new_working_branch() {
+    echo "Hello"; exit 0
 }
 
 current_branch() {
@@ -44,8 +45,4 @@ set_branch() {
 show_branch() {
     echo `git config at.branch`
     exit 1
-}
-
-delete_merged_branches_locally() {
-    git branch --merged | grep -v '\*\|master\|dev|develop' | xargs -n 1 git branch -d
 }
