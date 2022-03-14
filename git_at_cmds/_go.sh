@@ -18,6 +18,8 @@ cmd__go() {
     # set the current WIP branch
     git @ wip -s
 
+    read -p "Name: " NAME
+
 
 
     git config --replace-all at.initialised true

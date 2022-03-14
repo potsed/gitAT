@@ -9,6 +9,7 @@ cmd_info() {
     echo "git @ tag: "`git @ tag`
     echo "git @ id: "`git @ id`
     echo "git @ version: "`git @ version`
+    echo "git @ wip: "`git @ wip`
     echo
     exit 1
 }
