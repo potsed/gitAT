@@ -25,6 +25,6 @@ set_label() {
 }
 
 show_label() {
-    echo "[P: "`git @ project`" F: "`git @ feature`" I: "`git @ task`" B: "`git @ branch -c`"]"
+    echo "[P: "`git @ project`" F: "`git @ feature`" I: "`git @ issue`" B: "`git @ branch -c`"]"
     return;
 }

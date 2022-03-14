@@ -7,7 +7,7 @@ usage() {
 cmd__go() {
     # Set the base branch based on the origin
     local ORIGIN_BRANCH=`git branch -rl "*/HEAD" | rev | cut -d/ -f1 | rev`
-    git @ base $ORIGIN_BRANCH
+    git @ _trunk $ORIGIN_BRANCH
 
     # Reset the version
     git @ version -r
@@ -16,11 +16,7 @@ cmd__go() {
     git @ branch .
 
     # set the current WIP branch
-    git @ wip -s
-
-    read -p "Name: " NAME
-
-
+    git @ wip .
 
     git config --replace-all at.initialised true
 }

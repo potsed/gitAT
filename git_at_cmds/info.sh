@@ -1,15 +1,33 @@
 cmd_info() {
-    echo "git @ project: "`git @ project`
-    echo "git @ feature: "`git @ feature`
-    echo "git @ branch: "`git @ branch`
-    echo "git @ task: "`git @ task`
-    echo "git @ base: "`git @ base`
-    echo "git @ label: "`git @ label`
-    echo "git @ _path: "`git @ _path`
-    echo "git @ tag: "`git @ tag`
-    echo "git @ id: "`git @ id`
-    echo "git @ version: "`git @ version`
-    echo "git @ wip: "`git @ wip`
-    echo
+
+    local PROJECT=`git @ project`
+    local VERSION=`git @ version`
+    local TAG=`git @ tag`
+    local FEATURE=`git @ feature`
+    local ISSUE=`git @ issue`
+    local BRANCH=`git @ branch`
+    local GITAT_PATH=`git @ _path`
+    local TRUNK=`git @ _trunk`
+    local WIP=`git @ wip`
+    local GITAT_ID=`git @ id`
+    local LABEL=`git @ label`
+
+    cat << EOF
+
+| Command       | Current Value
+---------------------------------------
+| git @ project | ${PROJECT}
+| git @ feature | ${FEATURE}
+| git @ version | ${VERSION}
+| git @ tag     | ${TAG}
+| git @ branch  | ${BRANCH}
+| git @ issue   | ${ISSUE}
+| git @ wip     | ${WIP}
+| git @ id      | ${GITAT_ID}
+| git @ label   | ${LABEL}
+| git @ _path   | ${GITAT_PATH}
+| git @ _trunk  | ${TRUNK}
+
+EOF
     exit 1
 }

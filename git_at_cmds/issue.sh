@@ -3,7 +3,7 @@ usage() {
     exit 1
 }
 
-cmd_task() {
+cmd_issue() {
     if [ "$#" -lt 1 ]; then
         show_task; exit 0
     elif [ "$#" -eq 1 ]; then
@@ -18,9 +18,9 @@ cmd_task() {
 }
 
 set_task() {
-    from=`git @ task`
+    from=`git @ issue`
     `git config --replace-all at.task $1`
-    echo 'Task updated to: '`git @ task`" from $from"
+    echo 'Task updated to: '`git @ issue`" from $from"
     exit 1
 }
 

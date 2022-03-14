@@ -24,8 +24,29 @@ Most subcommands have help @ `git @ <subcommand> --help` for more details.
 Available Subcommands:
 --------------------------------------------------------------------------------
 base (git @ base [<branch>])
-    - Sets the base working branch for you current project making it easy
-      to switch between
+branch (git @ branch <options>)
+changes (git @ changes)
+feature (git @ feature <options> [<feature>])
+id
+info (git @ info <options>)
+label
+lint
+logs
+path
+root
+save
+scrub
+project
+squash (git @ squash branch)
+tag
+task
+version
+wip
+work
+
+
+base (git @ trunk [<branch>])
+    - Holds the primary trunk (master|main|etc.) branch name
 
 branch (git @ branch <options>)
     - Stores a handle to the current working branch for easy navigation
