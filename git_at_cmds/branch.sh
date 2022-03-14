@@ -11,6 +11,9 @@ cmd_branch() {
             "-h"|"--help"|"help"|"h")
                 usage; exit 0
                 ;;
+            "-n"|"--new"|"n"|"new")
+                new_working_branch; exit 0
+                ;;
             "-c"|"--current"|"c"|"current")
                 current_branch; exit 0
                 ;;

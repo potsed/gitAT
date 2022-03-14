@@ -35,7 +35,7 @@ cmd_wip() {
             "-h"|"--help"|"help"|"h")
                 usage; exit 0
                 ;;
-            "-s"|"--set"|"s"|"set")
+            "-s"|"--set"|"s"|"set"|".")
                 set_wip; exit 0
                 ;;
             "-c"|"--checkout"|"c"|"checkout")

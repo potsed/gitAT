@@ -12,19 +12,15 @@ usage() {
    \_/__/
 
 EOF
-    echo 'Usage: git @ work [-t]'
+    echo 'Usage: git @ work'
     exit 0
 }
 
 cmd_work() {
-    git @ stop
     if [ "$#" -eq 1 ]; then
         case $1 in
             "-h"|"--help"|"help"|"h")
                 usage; exit 0
-                ;;
-            "-t"|"--toggl"|"t"|"toggle")
-                local HAS_TOGGL=1
                 ;;
         esac
     fi
@@ -33,9 +29,7 @@ cmd_work() {
     local branch=`git @ branch`
     local STASHKEY='autostash-work-branch'
     if [ "$current" == "$branch" ]; then
-        if [ "$HAS_TOGGL" == "1" ]; then
-            git @ start
-        fi
+
         echo "You're already in the working branch"
         echo
         exit 1;
@@ -61,10 +55,6 @@ cmd_work() {
 
     echo 'Switching to local branch'
     git checkout $branch
-
-    if [ "$HAS_TOGGL" == "1" ]; then
-        git @ start
-    fi
 
     if [ "$HAS_STASH" == "1" ]; then
         echo 'Reapplying stashed changes'

@@ -1,5 +1,5 @@
 usage() {
-    echo 'Runs at first use in a repo'
+    echo 'GitAT new repo onboarding'
     echo 'Initialises all the main settings for general use of the tool'
     exit 1
 }
@@ -14,6 +14,9 @@ cmd__go() {
 
     # set the current working branch
     git @ branch .
+
+    # set the current WIP branch
+    git @ wip -s
 
 
 
