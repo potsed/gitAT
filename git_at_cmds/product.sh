@@ -3,7 +3,7 @@ usage() {
     exit 1
 }
 
-cmd_project() {
+cmd_product() {
     if [ "$#" -lt 1 ]; then
         show_project; exit 0
     elif [ "$#" -gt 0 ]; then
@@ -19,7 +19,7 @@ cmd_project() {
 
 set_project() {
     git config --replace-all at.project "$@"
-    echo 'project updated to: '$(git @ project);
+    echo 'project updated to: '$(git @ product);
     exit 0
 }
 

@@ -13,9 +13,10 @@ cmd_version() {
         show_version; exit 0;
     fi
 
-    while getopts ':hrMmb' flag; do
+    while getopts ':htrMmb' flag; do
         case "${flag}" in
             h) usage; exit 0 ;;
+            t) show_tag; exit 0;;
             r) reset_version; exit 0 ;;
             M) local MAJOR=true ;;
             m) local MINOR=true ;;
@@ -36,6 +37,10 @@ cmd_version() {
     fi
 
     show_version;
+}
+
+show_tag() {
+    echo "v`git @ version`"
 }
 
 reset_version() {

@@ -1,4 +1,4 @@
-cmd_id() {
+cmd__id() {
     P=`git config at.project`
     M=`git config at.major`
     m=`git config at.minor`

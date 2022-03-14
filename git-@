@@ -16,112 +16,108 @@ usage() {
 
 
 Usage:
---------------------------------------------------------------------------------
+================================================================================
 git @ <subcommand> [<options>]
 
 Most subcommands have help @ `git @ <subcommand> --help` for more details.
 
+
 Available Subcommands:
---------------------------------------------------------------------------------
-base (git @ base [<branch>])
-branch (git @ branch <options>)
-changes (git @ changes)
-feature (git @ feature <options> [<feature>])
-id
-info (git @ info <options>)
-label
-lint
-logs
-path
-root
-save
-scrub
-project
-squash (git @ squash branch)
-tag
-task
-version
-wip
-work
+================================================================================
 
-
-base (git @ trunk [<branch>])
-    - Holds the primary trunk (master|main|etc.) branch name
-
-branch (git @ branch <options>)
-    - Stores a handle to the current working branch for easy navigation
-    - Cleans up completed and merged branches
-
+Informative Subcommands
+-----------------------
 changes (git @ changes)
     - Displays a list of files with any changes
 
-feature (git @ feature <options> [<feature>])
-    - Sets and gets the feature you're working on for a project
+hash (git @ hash)
+    - Gets the hashes for remote and local branches
+    - Compares the local and remote branches hashes
 
-id
-    - Gets a string made up of the version, major, and minor versions
-
-info
-    - Show the result of many of the `git @` commands in an info panel
-
-label
-    - A label in the format of (S.F.T) standing for Project, Feature, Task
-
-lint
-    - Set your linting tool, and run linting over your changed files only
+info (git @ info)
+    - Shows the current values for many of the GitAT sub-commands
 
 logs
     - Show the last 10 lines of logs in pretty format
 
-path
-    - Returns your project root path
-      Runs: `git rev-parse --show-toplevel`
 
-root
-    - Runs: `git stash push --include-untracked -m "switched-to-${BASE}"`
-            `git checkout ${BASE}` # Set with `git @ base <branch>`
-            `git pull --rebase`
-    NB. This does not reapply your stash
+
+Branch Helper Subcommands
+-------------------------
+branch (git @ branch)
 
 save
     - Same as running `git add .; git commit -m;` but also checks you're in
       the correct path.
-
-scrub
-    - Similar to lint, except this also runs the auto beautifier like phpcbf
-
-project
-    - set and get the project you're working on
-
-start
-    - Start a toggl timer
-
-stop
-    - Stop a toggl timer
-
-squash (git @ squash branch)
-    - SOFT resets the commits of the current branch to the HEAD of the given BRANCH
-    - Runs:
-
-tag
-    - set the minor version og the code, this is not related to git tag
-
-task
-    - Set the task you're currently working on as part of the project workflow
-
-toggl
-    - Link to toggl timer
-
-version
-    - Show a version string vM.m.t
 
 wip
     - Set the current branch as a work in progress so that you can work on
       something else and come back to it later
 
 work
-    - Switch to the current working branch
+    - Switch bewtween the set wip branch and master
 
+
+
+Product Helper Subcommands
+--------------------------
+feature (git @ feature <options> [<feature>])
+    - Sets and gets the feature you're working on in a branch
+
+issue
+    - Set the issue you're working on in the branch as part of the product workflow
+
+product
+    - Set and gets the product being worked on in this repo for use in
+      simplyfying commit messages etc.
+
+version
+    - Manage versioning information
+
+
+
+
+
+
+
+_id
+    - Gets a string made up of the version, major, and minor versions
+
+
+
+
+
+
+
+
+
+root
+    - Runs: `git stash push --include-untracked -m "switched-to-${BASE}"`
+            `git checkout ${BASE}` # Set with `git @ _trunk <branch>`
+            `git pull --rebase`
+    NB. This does not reapply your stash
+
+
+
+
+
+squash (git @ squash branch)
+    - SOFT resets the commits of the current branch to the HEAD of the given BRANCH
+
+
+
+
+
+
+
+_trunk (git @ _trunk [<branch>])
+    - Holds/Sets the primary trunk (master|main|etc.) branch name
+
+_label
+    - A label in the format of [P.F.I] standing for Product, Feature, Issue
+
+_path
+    - Returns your local repo root path
 EOF
 }
 

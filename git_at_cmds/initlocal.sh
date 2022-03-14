@@ -34,9 +34,9 @@ set_remote() {
     git commit -m "Initial commit";
     sleep 5;
 
-    git @ project "$1";
+    git @ product "$1";
     git @ version -r;
-    git remote add origin git@gitlab.com:squibler/$(git @ project).git;
+    git remote add origin git@gitlab.com:squibler/$(git @ product).git;
     sleep 5;
 
     # Now create the rest of the structure MASTER -> STAGING -> DEVELOP
@@ -59,7 +59,7 @@ next_step() {
     echo "You should now visit the settings for this project and set"
     echo "the default branch to 'develop'"
     echo ""
-    echo "https://gitlab.com/squibler/$(git @ project)/settings/repository"
+    echo "https://gitlab.com/squibler/$(git @ product)/settings/repository"
     echo ""
     exit 0
 }

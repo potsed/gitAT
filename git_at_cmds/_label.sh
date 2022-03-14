@@ -3,7 +3,7 @@ usage() {
     exit 1
 }
 
-cmd_label() {
+cmd__label() {
     if [ "$#" -lt 1 ]; then
         show_label; exit 0
     elif [ "$#" -eq 1 ]; then
@@ -20,11 +20,11 @@ cmd_label() {
 set_label() {
     `git config --replace-all at.label "$@ "`
 
-    echo 'Label updated to: '`git @ label`
+    echo 'Label updated to: '`git @ _label`
     return;
 }
 
 show_label() {
-    echo "[P: "`git @ project`" F: "`git @ feature`" I: "`git @ issue`" B: "`git @ branch -c`"]"
+    echo "[`git @ product`.`git @ feature`.`git @ issue`]"
     return;
 }

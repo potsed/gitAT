@@ -26,8 +26,8 @@ save_work() {
 
     if [ "$current" == "prod" ]; then
         read -p "Are you sure you want to commit this? (Y/N): " CONFIRMATION && [[ $CONFIRMATION == [yY] || $CONFIRMATION == [yY][eE][sS] ]] || exit 1;
-        git @ tag +
-        git tag `git @ tag`
+        git @ version -t +
+        git tag `git @ version -t`
 
     elif [ "$current" != "$branch" ]; then
         echo "Oops cannot save the changes, you're not on the correct working branch $branch"
@@ -36,12 +36,12 @@ save_work() {
     fi
 
     if [ "$#" -eq 1 ]; then
-        git @ label "$1";
+        git @ _label "$1";
     fi
 
     local thePWD=`pwd`
     local path=`git @ _path`
-    local message=`git @ label`
+    local message=`git @ _label`
 
     cd $path
     git add -p && git cz -m \""$message\""

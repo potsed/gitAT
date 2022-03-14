@@ -83,7 +83,7 @@ release() {
         local MSG="Bugfix";
     fi
 
-    git tag -a $(git @ tag) -m $MSG;
+    git tag -a $(git @ version -t) -m $MSG;
     git push origin master --tags;
 
     if [[ "master" != "${CURRENT_BRANCH}" ]]; then
@@ -100,7 +100,7 @@ next_step() {
     echo "You should now visit the settings for this project and set"
     echo "the default branch to 'develop'"
     echo ""
-    echo "https://gitlab.com/squibler/$(git @ project)/settings/repository"
+    echo "https://gitlab.com/squibler/$(git @ product)/settings/repository"
     echo ""
     exit 0
 }
