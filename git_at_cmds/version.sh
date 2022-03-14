@@ -2,7 +2,7 @@ usage() {
     echo "View current version: git @ version"
     echo "Increment major version Number: git @ version -M"
     echo "Increment minor version Number: git @ version -m 1"
-    echo "Increment fix version Number: git @ version -f 1"
+    echo "Increment fix version Number: git @ version -b 1"
     echo "Show this help: git @ version -h"
     echo "DO NOT MISUSE: Reset the version to 0.0.0: git @ version -r"
     exit 0
@@ -13,13 +13,13 @@ cmd_version() {
         show_version; exit 0;
     fi
 
-    while getopts ':hrMmf' flag; do
+    while getopts ':hrMmb' flag; do
         case "${flag}" in
             h) usage; exit 0 ;;
             r) reset_version; exit 0 ;;
             M) local MAJOR=true ;;
             m) local MINOR=true ;;
-            f) local FIX=true ;;
+            b) local BUMP=true ;;
         esac
     done
 
@@ -31,7 +31,7 @@ cmd_version() {
         increment_minor;
     fi
 
-    if [[ $FIX ]]; then
+    if [[ $BUMP ]]; then
         increment_fix;
     fi
 
@@ -55,8 +55,8 @@ increment_minor() {
 }
 
 increment_fix() {
-    local OLD_FIX=$(git config at.fix);
-    set_fix $(($OLD_FIX + 1))
+    local OLD_BUMP=$(git config at.fix);
+    set_fix $(($OLD_BUMP + 1))
 }
 
 set_major() {

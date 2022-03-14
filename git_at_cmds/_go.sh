@@ -12,6 +12,10 @@ cmd__go() {
     # Reset the version
     git @ version -r
 
+    # set the current working branch
+    git @ branch .
+
+
 
     git config --replace-all at.initialised true
 }
