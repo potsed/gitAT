@@ -26,7 +26,7 @@ save_work() {
 
     if [ "$current" == "prod" ]; then
         read -p "Are you sure you want to commit this? (Y/N): " CONFIRMATION && [[ $CONFIRMATION == [yY] || $CONFIRMATION == [yY][eE][sS] ]] || exit 1;
-        git @ version -t +
+        git @ version -t
         git tag `git @ version -t`
 
     elif [ "$current" != "$branch" ]; then

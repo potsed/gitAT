@@ -25,6 +25,7 @@ set_label() {
 }
 
 show_label() {
-    echo "[`git @ product`.`git @ feature`.`git @ issue`]"
+    echo "[`git @ product`.`git @ feature`.`git @ issue`.`git @ version -t`]"
     return;
+
 }
