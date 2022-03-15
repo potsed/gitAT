@@ -6,7 +6,7 @@ version() {
 }
 
 usage() {
-    cat << 'EOF'
+    cat << EOF
 
   __ _(_) |_      / __ \
  / _` | | __|    / / _` |
