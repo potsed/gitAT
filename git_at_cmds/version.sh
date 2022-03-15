@@ -1,10 +1,19 @@
 usage() {
-    echo "View current version: git @ version"
-    echo "Increment major version Number: git @ version -M"
-    echo "Increment minor version Number: git @ version -m 1"
-    echo "Increment fix version Number: git @ version -b 1"
-    echo "Show this help: git @ version -h"
-    echo "DO NOT MISUSE: Reset the version to 0.0.0: git @ version -r"
+    cat << EOF
+
+View current version: ................................ git @ version
+View current tagged version: ......................... git @ version -t
+Show this help: ...................................... git @ version -h
+
+Increment Version
+MAJOR version number: ................................ git @ version -M
+MINOR version mnumber: ............................... git @ version -m
+BUMP version number: ................................. git @ version -b
+
+BE CAREFUL WITH THIS ONE:
+Reset the version to 0.0.0: .......................... git @ version -r
+
+EOF
     exit 0
 }
 
@@ -40,7 +49,7 @@ cmd_version() {
 }
 
 show_tag() {
-    echo "v`git @ version`"
+    echo "v"`git @ version`
 }
 
 reset_version() {
