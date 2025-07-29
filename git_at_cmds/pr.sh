@@ -197,9 +197,10 @@ generate_auto_description() {
     description+="\n## 📁 File Analysis\n\n"
     
     # Group files by directory/type
-    local file_types=()
-    local dirs=()
+    local file_types=""
+    local dirs=""
     
+    # Process changed files to build file types and directories
     while IFS= read -r file; do
         if [ -n "$file" ]; then
             # Get file extension
@@ -214,51 +215,41 @@ generate_auto_description() {
                 dir="root"
             fi
             
-            # Add to arrays if not already present
-            local found_ext=false
-            local found_dir=false
-            
-            # Check if extension already exists
-            for existing_ext in "${file_types[@]}"; do
-                if [ "$existing_ext" = "$ext" ]; then
-                    found_ext=true
-                    break
+            # Add to file types if not already present
+            if [[ ! "$file_types" =~ "$ext" ]]; then
+                if [ -n "$file_types" ]; then
+                    file_types="$file_types $ext"
+                else
+                    file_types="$ext"
                 fi
-            done
-            
-            # Check if directory already exists
-            for existing_dir in "${dirs[@]}"; do
-                if [ "$existing_dir" = "$dir" ]; then
-                    found_dir=true
-                    break
-                fi
-            done
-            
-            # Add if not found
-            if [ "$found_ext" = false ]; then
-                file_types+=("$ext")
             fi
-            if [ "$found_dir" = false ]; then
-                dirs+=("$dir")
+            
+            # Add to directories if not already present
+            if [[ ! "$dirs" =~ "$dir" ]]; then
+                if [ -n "$dirs" ]; then
+                    dirs="$dirs $dir"
+                else
+                    dirs="$dir"
+                fi
             fi
         fi
     done <<< "$changed_files"
     
     # Add file type summary
-    if [ ${#file_types[@]} -gt 0 ]; then
+    if [ -n "$file_types" ]; then
         description+="### 🔤 File Types\n\n"
         description+="This PR affects the following file types:\n\n"
-        for ext in "${file_types[@]}"; do
+        for ext in $file_types; do
             description+="- \`$ext\`\n"
         done
         description+="\n"
     fi
     
     # Add directory summary if multiple directories
-    if [ ${#dirs[@]} -gt 1 ]; then
+    if [ -n "$dirs" ] && [ "$(echo "$dirs" | wc -w)" -gt 1 ]; then
         description+="### 📂 Directories Affected\n\n"
         description+="Changes span across the following directories:\n\n"
-        for dir in "${dirs[@]}"; do
+        for dir in $dirs; do
             description+="- \`$dir\`\n"
         done
         description+="\n"
