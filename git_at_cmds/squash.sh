@@ -322,6 +322,7 @@ detect_parent_branch() {
     # Method 1: Check git config for upstream branch
     parent_branch=$(git config "branch.$current_branch.merge" 2>/dev/null | sed 's|refs/heads/||' || echo "")
     if [ -n "$parent_branch" ]; then
+        echo "Debug: Found parent via git config: $parent_branch" >&2
         echo "$parent_branch"
         return 0
     fi
@@ -329,6 +330,7 @@ detect_parent_branch() {
     # Method 2: Check if current branch has an upstream tracking branch
     parent_branch=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null | sed 's|refs/remotes/origin/||' || echo "")
     if [ -n "$parent_branch" ]; then
+        echo "Debug: Found parent via upstream tracking: $parent_branch" >&2
         echo "$parent_branch"
         return 0
     fi
@@ -337,6 +339,7 @@ detect_parent_branch() {
     # Use git show-branch to find the most recent common ancestor
     local parent_branch=""
     local best_merge_base=""
+    local best_merge_date=""
     
     while IFS= read -r branch; do
         if [ -n "$branch" ] && [ "$branch" != "$current_branch" ]; then
@@ -345,15 +348,16 @@ detect_parent_branch() {
             merge_base=$(git merge-base "$branch" HEAD 2>/dev/null || echo "")
             
             if [ -n "$merge_base" ]; then
-                # Count commits from merge base to HEAD
-                local commits_ahead
-                commits_ahead=$(git rev-list --count "$merge_base..HEAD" 2>/dev/null || echo "0")
+                # Get the commit date of the merge base
+                local merge_date
+                merge_date=$(git log -1 --format="%ct" "$merge_base" 2>/dev/null || echo "0")
                 
-                # The branch with the most commits ahead has the most recent common ancestor
-                if [ "$commits_ahead" -gt 0 ]; then
-                    if [ -z "$best_merge_base" ] || [ "$commits_ahead" -gt "$(git rev-list --count "$best_merge_base..HEAD" 2>/dev/null || echo "0")" ]; then
+                # The branch with the most recent merge base is the most likely parent
+                if [ "$merge_date" -gt 0 ]; then
+                    if [ -z "$best_merge_date" ] || [ "$merge_date" -gt "$best_merge_date" ]; then
                         parent_branch="$branch"
                         best_merge_base="$merge_base"
+                        best_merge_date="$merge_date"
                     fi
                 fi
             fi
@@ -361,6 +365,7 @@ detect_parent_branch() {
     done < <(git branch --list | sed 's/^[* ]*//')
     
     if [ -n "$parent_branch" ]; then
+        echo "Debug: Found parent branch '$parent_branch' with merge base '$best_merge_base' (date: $best_merge_date)" >&2
         echo "$parent_branch"
         return 0
     fi
@@ -368,6 +373,7 @@ detect_parent_branch() {
     # Method 4: Fallback to configured trunk branch
     parent_branch=$(git config at.trunk 2>/dev/null || echo "")
     if [ -n "$parent_branch" ]; then
+        echo "Debug: Found parent via configured trunk: $parent_branch" >&2
         echo "$parent_branch"
         return 0
     fi
@@ -375,6 +381,7 @@ detect_parent_branch() {
     # Method 5: Try common branch names
     for branch in "main" "master" "develop" "development"; do
         if git rev-parse --verify "$branch" >/dev/null 2>&1; then
+            echo "Debug: Found parent via common name: $branch" >&2
             echo "$branch"
             return 0
         fi

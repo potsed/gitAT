@@ -236,5 +236,7 @@ validate_branch_name() {
     return 0
 }
 
-# Run the command
-cmd_hotfix "$@" 
+# Only run the command if this script is executed directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    cmd_hotfix "$@"
+fi 

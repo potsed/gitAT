@@ -22,11 +22,12 @@ FEATURES:
   ✅ Commit message integration
   ✅ Custom title and description
   ✅ Automatic commit squashing (configurable)
+  ✅ Automatic description generation from changed files
 
 EXAMPLES:
-  git @ pr                                    # Create PR with default title
-  git @ pr "Add user authentication"          # Create PR with custom title
-  git @ pr -d "Detailed description here"     # Create PR with description
+  git @ pr                                    # Create PR with default title and auto-generated description
+  git @ pr "Add user authentication"          # Create PR with custom title and auto-generated description
+  git @ pr -d "Detailed description here"     # Create PR with custom description
   git @ pr -b main                            # Create PR targeting main branch
   git @ pr -h                                 # Show this help
 
@@ -41,6 +42,7 @@ OPTIONS:
 
 AUTOMATIC FEATURES:
   - Uses last commit message as default title
+  - Generates description from changed files (when not provided)
   - Includes branch name and commit info
   - Validates current branch is not trunk
   - Checks for uncommitted changes
@@ -134,6 +136,179 @@ get_default_title() {
     else
         echo "Update from $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "current branch")"
     fi
+}
+
+# Generate automatic description based on changed files
+generate_auto_description() {
+    local base_branch="$1"
+    local current_branch="$2"
+    local description=""
+    
+    # Get list of changed files
+    local changed_files
+    changed_files=$(git diff --name-only "$base_branch..$current_branch" 2>/dev/null || echo "")
+    
+    if [ -z "$changed_files" ]; then
+        echo "No files changed compared to $base_branch"
+        return
+    fi
+    
+    # Count files by type
+    local total_files=0
+    local added_files=0
+    local modified_files=0
+    local deleted_files=0
+    
+    # Analyze each changed file
+    while IFS= read -r file; do
+        if [ -n "$file" ]; then
+            total_files=$((total_files + 1))
+            
+            # Check if file was added, modified, or deleted
+            if git diff --name-status "$base_branch..$current_branch" | grep -q "^A.*$file$"; then
+                added_files=$((added_files + 1))
+            elif git diff --name-status "$base_branch..$current_branch" | grep -q "^D.*$file$"; then
+                deleted_files=$((deleted_files + 1))
+            else
+                modified_files=$((modified_files + 1))
+            fi
+        fi
+    done <<< "$changed_files"
+    
+    # Generate summary
+    description="# 📋 Pull Request Summary\n\n"
+    description+="This PR contains changes from branch \`$current_branch\` targeting \`$base_branch\`.\n\n"
+    
+    description+="## 📊 Changes Overview\n\n"
+    description+="| Metric | Count |\n"
+    description+="|--------|-------|\n"
+    description+="| **Total Files** | $total_files |\n"
+    
+    if [ $added_files -gt 0 ]; then
+        description+="| **Added** | $added_files |\n"
+    fi
+    if [ $modified_files -gt 0 ]; then
+        description+="| **Modified** | $modified_files |\n"
+    fi
+    if [ $deleted_files -gt 0 ]; then
+        description+="| **Deleted** | $deleted_files |\n"
+    fi
+    
+    description+="\n## 📁 File Analysis\n\n"
+    
+    # Group files by directory/type
+    local file_types=""
+    local dirs=""
+    
+    # Process changed files to build file types and directories
+    while IFS= read -r file; do
+        if [ -n "$file" ]; then
+            # Get file extension
+            local ext="${file##*.}"
+            if [ "$ext" = "$file" ]; then
+                ext="no-extension"
+            fi
+            
+            # Get directory
+            local dir=$(dirname "$file")
+            if [ "$dir" = "." ]; then
+                dir="root"
+            fi
+            
+            # Add to file types if not already present
+            if [[ ! "$file_types" =~ "$ext" ]]; then
+                if [ -n "$file_types" ]; then
+                    file_types="$file_types $ext"
+                else
+                    file_types="$ext"
+                fi
+            fi
+            
+            # Add to directories if not already present
+            if [[ ! "$dirs" =~ "$dir" ]]; then
+                if [ -n "$dirs" ]; then
+                    dirs="$dirs $dir"
+                else
+                    dirs="$dir"
+                fi
+            fi
+        fi
+    done <<< "$changed_files"
+    
+    # Add file type summary
+    if [ -n "$file_types" ]; then
+        description+="### 🔤 File Types\n\n"
+        description+="This PR affects the following file types:\n\n"
+        for ext in $file_types; do
+            description+="- \`$ext\`\n"
+        done
+        description+="\n"
+    fi
+    
+    # Add directory summary if multiple directories
+    if [ -n "$dirs" ] && [ "$(echo "$dirs" | wc -w)" -gt 1 ]; then
+        description+="### 📂 Directories Affected\n\n"
+        description+="Changes span across the following directories:\n\n"
+        for dir in $dirs; do
+            description+="- \`$dir\`\n"
+        done
+        description+="\n"
+    fi
+    
+    # List all changed files
+    description+="## 📝 Changed Files\n\n"
+    description+="<details>\n<summary>📋 Click to view all changed files</summary>\n\n"
+    description+="```\n"
+    
+    # Get file status information once
+    local file_status_info=""
+    file_status_info=$(git diff --name-status "$base_branch..$current_branch" 2>/dev/null || echo "")
+    
+    while IFS= read -r file; do
+        if [ -n "$file" ]; then
+            # Get file status
+            local status="✏️"  # Default to modified
+            
+            # Check if file was added or deleted
+            if [ -n "$file_status_info" ] && echo "$file_status_info" | grep -q "^A.*$file$"; then
+                status="➕"
+            elif [ -n "$file_status_info" ] && echo "$file_status_info" | grep -q "^D.*$file$"; then
+                status="🗑️"
+            fi
+            
+            description+="$status $file\n"
+        fi
+    done <<< "$changed_files"
+    
+    description+="```\n</details>\n\n"
+    
+    # Add commit summary
+    local commit_count
+    commit_count=$(git rev-list --count "$base_branch..$current_branch" 2>/dev/null || echo "0")
+    
+    if [ "$commit_count" -gt 1 ]; then
+        description+="## 🔄 Commits\n\n"
+        description+="This PR includes **$commit_count commits**.\n\n"
+        description+="<details>\n<summary>📜 Click to view commit history</summary>\n\n"
+        description+="```\n"
+        
+        # Get commit history once
+        local commit_history=""
+        commit_history=$(git log --oneline -5 "$base_branch..$current_branch" 2>/dev/null || echo "")
+        
+        # Add commits to description
+        if [ -n "$commit_history" ]; then
+            description+="$commit_history\n"
+        fi
+        
+        description+="```\n</details>\n\n"
+    fi
+    
+    # Add footer
+    description+="---\n\n"
+    description+="*This description was automatically generated based on the changes in this PR.*\n"
+    
+    echo "$description"
 }
 
 # Create GitHub PR using gh CLI
@@ -396,6 +571,16 @@ cmd_pr() {
         exit 1
     fi
     
+    # Check if there are commits between the branches
+    local commit_count
+    commit_count=$(git rev-list --count "$base_branch..$current_branch" 2>/dev/null || echo "0")
+    
+    if [ "$commit_count" -eq 0 ]; then
+        echo "Error: No commits between $current_branch and $base_branch" >&2
+        echo "Cannot create a PR without any commits to merge." >&2
+        exit 1
+    fi
+    
     # Check for uncommitted changes
     if ! git diff --quiet || ! git diff --cached --quiet; then
         echo "Warning: You have uncommitted changes. Consider committing them first."
@@ -436,6 +621,12 @@ cmd_pr() {
         title=$(get_default_title)
     fi
     
+    # Generate automatic description if not provided
+    if [ -z "$description" ]; then
+        echo "Generating automatic description based on changed files..."
+        description=$(generate_auto_description "$base_branch" "$current_branch")
+    fi
+    
     # Get platform and repo info
     local platform
     local repo_info
@@ -446,6 +637,9 @@ cmd_pr() {
     echo "Creating PR for $platform repository: $repo_info"
     echo "From: $current_branch → To: $base_branch"
     echo "Title: $title"
+    if [ -n "$description" ]; then
+        echo "Description: Auto-generated based on changed files"
+    fi
     
     # Try to create PR using CLI tools
     local success=false
@@ -481,5 +675,7 @@ cmd_pr() {
     exit 0
 }
 
-# Run the command
-cmd_pr "$@" 
+# Only run the command if this script is executed directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    cmd_pr "$@"
+fi 
