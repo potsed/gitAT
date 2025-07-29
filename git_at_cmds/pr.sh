@@ -176,20 +176,25 @@ generate_auto_description() {
     done <<< "$changed_files"
     
     # Generate summary
-    description="## Changes Summary\n\n"
-    description+="**Files changed:** $total_files\n\n"
+    description="# 📋 Pull Request Summary\n\n"
+    description+="This PR contains changes from branch \`$current_branch\` targeting \`$base_branch\`.\n\n"
+    
+    description+="## 📊 Changes Overview\n\n"
+    description+="| Metric | Count |\n"
+    description+="|--------|-------|\n"
+    description+="| **Total Files** | $total_files |\n"
     
     if [ $added_files -gt 0 ]; then
-        description+="- **Added:** $added_files file(s)\n"
+        description+="| **Added** | $added_files |\n"
     fi
     if [ $modified_files -gt 0 ]; then
-        description+="- **Modified:** $modified_files file(s)\n"
+        description+="| **Modified** | $modified_files |\n"
     fi
     if [ $deleted_files -gt 0 ]; then
-        description+="- **Deleted:** $deleted_files file(s)\n"
+        description+="| **Deleted** | $deleted_files |\n"
     fi
     
-    description+="\n## Changed Files\n\n"
+    description+="\n## 📁 File Analysis\n\n"
     
     # Group files by directory/type
     local file_types=()
@@ -210,10 +215,30 @@ generate_auto_description() {
             fi
             
             # Add to arrays if not already present
-            if [[ ! " ${file_types[@]} " =~ " ${ext} " ]]; then
+            local found_ext=false
+            local found_dir=false
+            
+            # Check if extension already exists
+            for existing_ext in "${file_types[@]}"; do
+                if [ "$existing_ext" = "$ext" ]; then
+                    found_ext=true
+                    break
+                fi
+            done
+            
+            # Check if directory already exists
+            for existing_dir in "${dirs[@]}"; do
+                if [ "$existing_dir" = "$dir" ]; then
+                    found_dir=true
+                    break
+                fi
+            done
+            
+            # Add if not found
+            if [ "$found_ext" = false ]; then
                 file_types+=("$ext")
             fi
-            if [[ ! " ${dirs[@]} " =~ " ${dir} " ]]; then
+            if [ "$found_dir" = false ]; then
                 dirs+=("$dir")
             fi
         fi
@@ -221,17 +246,28 @@ generate_auto_description() {
     
     # Add file type summary
     if [ ${#file_types[@]} -gt 0 ]; then
-        description+="**File types:** ${file_types[*]}\n\n"
+        description+="### 🔤 File Types\n\n"
+        description+="This PR affects the following file types:\n\n"
+        for ext in "${file_types[@]}"; do
+            description+="- \`$ext\`\n"
+        done
+        description+="\n"
     fi
     
     # Add directory summary if multiple directories
     if [ ${#dirs[@]} -gt 1 ]; then
-        description+="**Directories:** ${dirs[*]}\n\n"
+        description+="### 📂 Directories Affected\n\n"
+        description+="Changes span across the following directories:\n\n"
+        for dir in "${dirs[@]}"; do
+            description+="- \`$dir\`\n"
+        done
+        description+="\n"
     fi
     
     # List all changed files
-    description+="<details>\n<summary>View all changed files</summary>\n\n"
-    description+="\`\`\`\n"
+    description+="## 📝 Changed Files\n\n"
+    description+="<details>\n<summary>📋 Click to view all changed files</summary>\n\n"
+    description+="```\n"
     
     while IFS= read -r file; do
         if [ -n "$file" ]; then
@@ -249,17 +285,17 @@ generate_auto_description() {
         fi
     done <<< "$changed_files"
     
-    description+="\`\`\`\n</details>\n\n"
+    description+="```\n</details>\n\n"
     
     # Add commit summary
     local commit_count
     commit_count=$(git rev-list --count "$base_branch..$current_branch" 2>/dev/null || echo "0")
     
     if [ "$commit_count" -gt 1 ]; then
-        description+="## Commits\n\n"
+        description+="## 🔄 Commits\n\n"
         description+="This PR includes **$commit_count commits**.\n\n"
-        description+="<details>\n<summary>View commit history</summary>\n\n"
-        description+="\`\`\`\n"
+        description+="<details>\n<summary>📜 Click to view commit history</summary>\n\n"
+        description+="```\n"
         
         # Show last 5 commits
         git log --oneline -5 "$base_branch..$current_branch" 2>/dev/null | while IFS= read -r commit; do
@@ -268,8 +304,12 @@ generate_auto_description() {
             fi
         done
         
-        description+="\`\`\`\n</details>\n"
+        description+="```\n</details>\n\n"
     fi
+    
+    # Add footer
+    description+="---\n\n"
+    description+="*This description was automatically generated based on the changes in this PR.*\n"
     
     echo "$description"
 }
