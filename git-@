@@ -117,7 +117,7 @@ Examples:
   git @ release -m              # Create minor release
 
 Enhanced Features:
-  git @ squash                   # Squash to parent branch (auto-detected)
+  git @ squash                   # Squash commits to parent branch (auto-detected)
   git @ squash --pr             # Squash commits for PR preparation
   git @ squash --auto on        # Enable automatic PR squashing
   git @ pr "Add auth feature"   # Create PR with auto-squash (if enabled)

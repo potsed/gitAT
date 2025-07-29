@@ -13,9 +13,9 @@ usage() {
 Usage: git @ squash [options] [<target-branch>]
 
 DESCRIPTION:
-  Reset the current branch to the HEAD of its parent/upstream branch to create
-  a clean commit without working history. Automatically detects the parent branch
-  based on where the current branch was created from.
+  Squash multiple commits into a single, consolidated commit by combining
+  all commits ahead of the target branch into one clean commit. Automatically
+  detects the parent branch based on where the current branch was created from.
 
 OPTIONS:
   -s, --save           Run 'git @ save' after squashing
@@ -49,15 +49,18 @@ PROCESS:
   1. Auto-detects parent branch (or uses specified target)
   2. Validates target branch exists
   3. Retrieves HEAD SHA of target branch
-  4. Soft reset to target branch SHA
-  5. Keeps all changes staged for commit
-  6. Optionally runs 'git @ save'
+  4. Creates temporary branch from target
+  5. Cherry-picks all commits from current branch
+  6. Resets current branch to squashed state
+  7. Optionally runs 'git @ save'
 
 USE CASES:
   - Clean up commit history before PR
   - Remove intermediate commits from feature branch
   - Create single clean commit from multiple commits
   - Automatic squashing before creating PRs
+  - Consolidate related changes into meaningful commits
+  - Simplify rollback operations
 
 WARNING:
   You may need to force push after squashing if branch is shared.
@@ -65,7 +68,9 @@ WARNING:
 
 GIT COMMANDS USED:
   - git rev-parse --verify --quiet --long ${BRANCH}
-  - git reset --soft ${SHA}
+  - git cherry-pick ${COMMIT}
+  - git reset --hard ${BRANCH}
+  - git checkout -b ${TEMP_BRANCH}
 
 SECURITY:
   All squash operations are validated and logged.
@@ -138,11 +143,18 @@ cmd_squash() {
     fi
     
     HEAD_SHA=$(head "$target_branch")
+    echo "Debug: head('$target_branch') returned: $HEAD_SHA"
+    
     if [ "$HEAD_SHA" = "0" ]; then
         echo "ERROR: Branch \"$target_branch\" does not exist locally" >&2
+        echo "Available branches:" >&2
+        git branch --list | sed 's/^[* ]*//' | while read -r branch; do
+            echo "  - $branch" >&2
+        done
         exit 1
     fi
     
+    echo "Target branch: $target_branch (SHA: $HEAD_SHA)"
     squash "$HEAD_SHA"
     
     echo "Squashed branch $(git @ branch -c) back to $target_branch"
@@ -322,32 +334,34 @@ detect_parent_branch() {
     fi
     
     # Method 3: Find the branch that the current branch diverged from
-    # Get all local branches
-    local branches=()
+    # Use git show-branch to find the most recent common ancestor
+    local parent_branch=""
+    local best_merge_base=""
+    
     while IFS= read -r branch; do
         if [ -n "$branch" ] && [ "$branch" != "$current_branch" ]; then
-            branches+=("$branch")
+            # Get the merge base between current branch and this branch
+            local merge_base
+            merge_base=$(git merge-base "$branch" HEAD 2>/dev/null || echo "")
+            
+            if [ -n "$merge_base" ]; then
+                # Count commits from merge base to HEAD
+                local commits_ahead
+                commits_ahead=$(git rev-list --count "$merge_base..HEAD" 2>/dev/null || echo "0")
+                
+                # The branch with the most commits ahead has the most recent common ancestor
+                if [ "$commits_ahead" -gt 0 ]; then
+                    if [ -z "$best_merge_base" ] || [ "$commits_ahead" -gt "$(git rev-list --count "$best_merge_base..HEAD" 2>/dev/null || echo "0")" ]; then
+                        parent_branch="$branch"
+                        best_merge_base="$merge_base"
+                    fi
+                fi
+            fi
         fi
     done < <(git branch --list | sed 's/^[* ]*//')
     
-    # Find the branch with the most recent common ancestor
-    local best_branch=""
-    local best_count=0
-    
-    for branch in "${branches[@]}"; do
-        # Count commits that are in current branch but not in this branch
-        local commit_count
-        commit_count=$(git rev-list --count "$branch..HEAD" 2>/dev/null || echo "0")
-        
-        # If this branch has fewer commits ahead, it's likely the parent
-        if [ "$commit_count" -gt 0 ] && [ "$commit_count" -gt "$best_count" ]; then
-            best_branch="$branch"
-            best_count="$commit_count"
-        fi
-    done
-    
-    if [ -n "$best_branch" ]; then
-        echo "$best_branch"
+    if [ -n "$parent_branch" ]; then
+        echo "$parent_branch"
         return 0
     fi
     
@@ -370,7 +384,7 @@ detect_parent_branch() {
 }
 
 head() {
-    local HEAD=$(git rev-parse --verify --quiet --long "$1")
+    local HEAD=$(git rev-parse --verify --quiet "$1")
     if [ "${HEAD}" != "" ]; then
         echo "${HEAD}"
     else
@@ -379,7 +393,145 @@ head() {
 }
 
 squash() {
-    git reset --soft "$1"
+    local target_sha="$1"
+    local current_branch
+    current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    
+    # Validate target SHA
+    if [ "$target_sha" = "0" ] || [ -z "$target_sha" ]; then
+        echo "❌ Invalid target SHA: $target_sha"
+        return 1
+    fi
+    
+    # Verify target SHA exists
+    if ! git rev-parse --verify "$target_sha" >/dev/null 2>&1; then
+        echo "❌ Target SHA does not exist: $target_sha"
+        return 1
+    fi
+    
+    # Get the number of commits to squash
+    local commit_count
+    commit_count=$(git rev-list --count "$target_sha..HEAD" 2>/dev/null || echo "0")
+    
+    if [ "$commit_count" -le 1 ]; then
+        echo "Only one commit or no commits to squash"
+        return 0
+    fi
+    
+    echo "Squashing $commit_count commits..."
+    
+    # Store current HEAD for safety
+    local original_head
+    original_head=$(git rev-parse HEAD 2>/dev/null || echo "")
+    
+    # Create a temporary branch for the squash operation
+    local temp_branch
+    temp_branch="${current_branch}-squash-$(date +%s)"
+    
+    # Check if temp branch name already exists
+    if git rev-parse --verify "$temp_branch" >/dev/null 2>&1; then
+        echo "⚠️  Temp branch name already exists, generating new name"
+        temp_branch="${current_branch}-squash-$(date +%s)-$(echo $RANDOM)"
+    fi
+    
+    # Check if working directory is clean
+    local has_uncommitted=false
+    if ! git diff --quiet || ! git diff --cached --quiet; then
+        echo "⚠️  Working directory has uncommitted changes"
+        echo "   Stashing changes before squashing..."
+        if ! git stash push -m "Auto-stash before squashing" 2>/dev/null; then
+            echo "❌ Failed to stash uncommitted changes"
+            return 1
+        fi
+        has_uncommitted=true
+    fi
+    
+    # Create temp branch from target
+    echo "Creating temporary branch from target..."
+    echo "   Current branch: $current_branch"
+    echo "   Target SHA: $target_sha"
+    echo "   Temp branch name: $temp_branch"
+    
+    # Try to create the temporary branch
+    if ! git checkout -b "$temp_branch" "$target_sha" 2>&1; then
+        echo "❌ Failed to create temporary branch for squashing"
+        echo "   Target SHA: $target_sha"
+        echo "   Current branch: $current_branch"
+        echo "   Temp branch name: $temp_branch"
+        
+        # Restore stashed changes if we stashed them
+        if [ "$has_uncommitted" = true ]; then
+            echo "   Restoring stashed changes..."
+            git stash pop 2>/dev/null || true
+        fi
+        return 1
+    fi
+    
+    # Cherry-pick all commits from current branch to temp branch
+    local cherry_pick_success=true
+    while IFS= read -r commit_hash; do
+        if [ -n "$commit_hash" ]; then
+            if ! git cherry-pick "$commit_hash" 2>/dev/null; then
+                echo "❌ Failed to cherry-pick commit $commit_hash"
+                cherry_pick_success=false
+                break
+            fi
+        fi
+    done < <(git rev-list --reverse "$target_sha..$original_head" 2>/dev/null)
+    
+    if [ "$cherry_pick_success" = false ]; then
+        # Clean up on failure
+        git checkout "$current_branch" 2>/dev/null
+        git branch -D "$temp_branch" 2>/dev/null
+        
+        # Restore stashed changes if we stashed them
+        if [ "$has_uncommitted" = true ]; then
+            echo "   Restoring stashed changes..."
+            git stash pop 2>/dev/null || true
+        fi
+        
+        echo "❌ Squashing failed due to conflicts"
+        return 1
+    fi
+    
+    # Reset current branch to temp branch (this creates the squashed commit)
+    if ! git checkout "$current_branch" 2>/dev/null; then
+        echo "❌ Failed to switch back to current branch"
+        git branch -D "$temp_branch" 2>/dev/null
+        
+        # Restore stashed changes if we stashed them
+        if [ "$has_uncommitted" = true ]; then
+            echo "   Restoring stashed changes..."
+            git stash pop 2>/dev/null || true
+        fi
+        return 1
+    fi
+    
+    if ! git reset --hard "$temp_branch" 2>/dev/null; then
+        echo "❌ Failed to reset current branch to squashed state"
+        git branch -D "$temp_branch" 2>/dev/null
+        
+        # Restore stashed changes if we stashed them
+        if [ "$has_uncommitted" = true ]; then
+            echo "   Restoring stashed changes..."
+            git stash pop 2>/dev/null || true
+        fi
+        return 1
+    fi
+    
+    # Clean up temp branch
+    git branch -D "$temp_branch" 2>/dev/null
+    
+    # Restore stashed changes if we stashed them
+    if [ "$has_uncommitted" = true ]; then
+        echo "   Restoring stashed changes..."
+        if ! git stash pop 2>/dev/null; then
+            echo "⚠️  Warning: Failed to restore stashed changes"
+            echo "   Use 'git stash list' to see stashed changes"
+        fi
+    fi
+    
+    echo "✅ Successfully squashed $commit_count commits into one"
 }
 
 save() {

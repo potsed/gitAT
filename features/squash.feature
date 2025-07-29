@@ -9,12 +9,12 @@ Feature: Enhanced Squash Command with Auto-Detection
 
   Scenario: Auto-detect parent branch and squash
     Given I have a feature branch created from "develop"
+    And I have multiple commits on the feature branch
     When I run "git @ squash"
     Then it should auto-detect the parent branch as "develop"
     And it should show "Auto-detected parent branch: develop"
-    And it should reset the current branch to develop HEAD
-    And it should keep all changes staged for commit
-    And it should show "Squashed branch [current] back to develop"
+    And it should squash all commits into one
+    And it should show "Successfully squashed [X] commits into one"
 
   Scenario: Auto-detect parent branch with upstream tracking
     Given I have a feature branch with upstream tracking to "main"
@@ -58,33 +58,36 @@ Feature: Enhanced Squash Command with Auto-Detection
     And it should exit with error
 
   Scenario: Basic squash to explicit target branch
+    Given I have multiple commits on my feature branch
     When I run "git @ squash develop"
-    Then it should reset the current branch to develop HEAD
-    And it should keep all changes staged for commit
-    And it should show "Squashed branch [current] back to develop"
+    Then it should squash all commits into one
+    And it should show "Successfully squashed [X] commits into one"
 
   Scenario: Squash to master branch
+    Given I have multiple commits on my feature branch
     When I run "git @ squash master"
-    Then it should reset the current branch to master HEAD
-    And it should keep all changes staged for commit
-    And it should show "Squashed branch [current] back to master"
+    Then it should squash all commits into one
+    And it should show "Successfully squashed [X] commits into one"
 
   Scenario: Squash and save with auto-detection
+    Given I have multiple commits on my feature branch
     When I run "git @ squash -s"
     Then it should auto-detect the parent branch
-    And it should reset the current branch to parent HEAD
+    And it should squash all commits into one
     And it should automatically run "git @ save"
     And it should create a new commit with all changes
 
   Scenario: Squash and save with explicit branch
+    Given I have multiple commits on my feature branch
     When I run "git @ squash develop -s"
-    Then it should reset the current branch to develop HEAD
+    Then it should squash all commits into one
     And it should automatically run "git @ save"
     And it should create a new commit with all changes
 
   Scenario: Squash and save with --save flag
+    Given I have multiple commits on my feature branch
     When I run "git @ squash develop --save"
-    Then it should reset the current branch to develop HEAD
+    Then it should squash all commits into one
     And it should automatically run "git @ save"
     And it should create a new commit with all changes
 
