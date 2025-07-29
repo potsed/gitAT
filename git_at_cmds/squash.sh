@@ -10,11 +10,12 @@ usage() {
  |___/            \____/            |_|
 
 
-Usage: git @ squash [options] <target-branch>
+Usage: git @ squash [options] [<target-branch>]
 
 DESCRIPTION:
-  Reset the current branch to the HEAD of another branch (usually develop or master)
-  to create a clean commit without working history. Useful for cleaning up before PR.
+  Reset the current branch to the HEAD of its parent/upstream branch to create
+  a clean commit without working history. Automatically detects the parent branch
+  based on where the current branch was created from.
 
 OPTIONS:
   -s, --save           Run 'git @ save' after squashing
@@ -23,9 +24,10 @@ OPTIONS:
   -h, --help           Show this help
 
 EXAMPLES:
-  git @ squash develop              # Reset to develop HEAD
-  git @ squash master               # Reset to master HEAD
-  git @ squash develop -s           # Reset and save
+  git @ squash                      # Squash to parent branch (auto-detected)
+  git @ squash -s                   # Squash to parent and save
+  git @ squash develop              # Squash to specific branch
+  git @ squash master -s            # Squash to master and save
   git @ squash --pr                 # Squash for PR using trunk branch
   git @ squash --auto on            # Enable automatic PR squashing
   git @ squash --auto off           # Disable automatic PR squashing
@@ -44,11 +46,12 @@ AUTOMATIC PR SQUASHING:
   git @ squash --auto status        # Show current setting
 
 PROCESS:
-  1. Validates target branch exists
-  2. Retrieves HEAD SHA of target branch
-  3. Soft reset to target branch SHA
-  4. Keeps all changes staged for commit
-  5. Optionally runs 'git @ save'
+  1. Auto-detects parent branch (or uses specified target)
+  2. Validates target branch exists
+  3. Retrieves HEAD SHA of target branch
+  4. Soft reset to target branch SHA
+  5. Keeps all changes staged for commit
+  6. Optionally runs 'git @ save'
 
 USE CASES:
   - Clean up commit history before PR
@@ -118,12 +121,21 @@ cmd_squash() {
     fi
     
     # Original squash functionality
-    if [ "$#" -eq 0 ]; then
-        usage; exit 1
-    fi
-    
-    local target_branch="$1"
+    local target_branch=""
     local HEAD_SHA
+    
+    # If no target branch specified, auto-detect parent branch
+    if [ "$#" -eq 0 ]; then
+        target_branch=$(detect_parent_branch)
+        if [ -z "$target_branch" ]; then
+            echo "Error: Could not auto-detect parent branch" >&2
+            echo "Please specify a target branch: git @ squash <branch>" >&2
+            usage; exit 1
+        fi
+        echo "Auto-detected parent branch: $target_branch"
+    else
+        target_branch="$1"
+    fi
     
     HEAD_SHA=$(head "$target_branch")
     if [ "$HEAD_SHA" = "0" ]; then
@@ -282,6 +294,79 @@ handle_pr_squash() {
     git branch -D "$temp_branch" 2>/dev/null
     
     echo "✅ Successfully squashed $commit_count commits into one for PR"
+}
+
+# Detect the parent/upstream branch of the current branch
+detect_parent_branch() {
+    local current_branch
+    local parent_branch=""
+    
+    current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    
+    if [ -z "$current_branch" ] || [ "$current_branch" = "HEAD" ]; then
+        return 1
+    fi
+    
+    # Method 1: Check git config for upstream branch
+    parent_branch=$(git config "branch.$current_branch.merge" 2>/dev/null | sed 's|refs/heads/||' || echo "")
+    if [ -n "$parent_branch" ]; then
+        echo "$parent_branch"
+        return 0
+    fi
+    
+    # Method 2: Check if current branch has an upstream tracking branch
+    parent_branch=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null | sed 's|refs/remotes/origin/||' || echo "")
+    if [ -n "$parent_branch" ]; then
+        echo "$parent_branch"
+        return 0
+    fi
+    
+    # Method 3: Find the branch that the current branch diverged from
+    # Get all local branches
+    local branches=()
+    while IFS= read -r branch; do
+        if [ -n "$branch" ] && [ "$branch" != "$current_branch" ]; then
+            branches+=("$branch")
+        fi
+    done < <(git branch --list | sed 's/^[* ]*//')
+    
+    # Find the branch with the most recent common ancestor
+    local best_branch=""
+    local best_count=0
+    
+    for branch in "${branches[@]}"; do
+        # Count commits that are in current branch but not in this branch
+        local commit_count
+        commit_count=$(git rev-list --count "$branch..HEAD" 2>/dev/null || echo "0")
+        
+        # If this branch has fewer commits ahead, it's likely the parent
+        if [ "$commit_count" -gt 0 ] && [ "$commit_count" -gt "$best_count" ]; then
+            best_branch="$branch"
+            best_count="$commit_count"
+        fi
+    done
+    
+    if [ -n "$best_branch" ]; then
+        echo "$best_branch"
+        return 0
+    fi
+    
+    # Method 4: Fallback to configured trunk branch
+    parent_branch=$(git config at.trunk 2>/dev/null || echo "")
+    if [ -n "$parent_branch" ]; then
+        echo "$parent_branch"
+        return 0
+    fi
+    
+    # Method 5: Try common branch names
+    for branch in "main" "master" "develop" "development"; do
+        if git rev-parse --verify "$branch" >/dev/null 2>&1; then
+            echo "$branch"
+            return 0
+        fi
+    done
+    
+    return 1
 }
 
 head() {

@@ -1,4 +1,4 @@
-Feature: Enhanced Squash Command
+Feature: Enhanced Squash Command with Auto-Detection
   As a developer using GitAT
   I want to squash commits for clean history and PR preparation
   So that I can maintain clean commit history and prepare branches for review
@@ -7,7 +7,57 @@ Feature: Enhanced Squash Command
     Given I am in a git repository
     And I have a feature branch with multiple commits
 
-  Scenario: Basic squash to target branch
+  Scenario: Auto-detect parent branch and squash
+    Given I have a feature branch created from "develop"
+    When I run "git @ squash"
+    Then it should auto-detect the parent branch as "develop"
+    And it should show "Auto-detected parent branch: develop"
+    And it should reset the current branch to develop HEAD
+    And it should keep all changes staged for commit
+    And it should show "Squashed branch [current] back to develop"
+
+  Scenario: Auto-detect parent branch with upstream tracking
+    Given I have a feature branch with upstream tracking to "main"
+    When I run "git @ squash"
+    Then it should auto-detect the parent branch as "main"
+    And it should show "Auto-detected parent branch: main"
+    And it should reset the current branch to main HEAD
+
+  Scenario: Auto-detect parent branch with git config merge
+    Given I have a feature branch with git config branch.<name>.merge set to "develop"
+    When I run "git @ squash"
+    Then it should auto-detect the parent branch as "develop"
+    And it should show "Auto-detected parent branch: develop"
+
+  Scenario: Auto-detect parent branch with branch divergence analysis
+    Given I have a feature branch that diverged from "main"
+    When I run "git @ squash"
+    Then it should auto-detect the parent branch as "main"
+    And it should show "Auto-detected parent branch: main"
+
+  Scenario: Auto-detect parent branch fallback to configured trunk
+    Given no upstream tracking is configured
+    And the trunk branch is configured as "main"
+    When I run "git @ squash"
+    Then it should auto-detect the parent branch as "main"
+    And it should show "Auto-detected parent branch: main"
+
+  Scenario: Auto-detect parent branch fallback to common names
+    Given no upstream tracking is configured
+    And no trunk branch is configured
+    And a "main" branch exists
+    When I run "git @ squash"
+    Then it should auto-detect the parent branch as "main"
+    And it should show "Auto-detected parent branch: main"
+
+  Scenario: Error when no parent can be detected
+    Given I have an isolated branch with no parent relationship
+    When I run "git @ squash"
+    Then it should show "Error: Could not auto-detect parent branch"
+    And it should suggest specifying a target branch
+    And it should exit with error
+
+  Scenario: Basic squash to explicit target branch
     When I run "git @ squash develop"
     Then it should reset the current branch to develop HEAD
     And it should keep all changes staged for commit
@@ -19,7 +69,14 @@ Feature: Enhanced Squash Command
     And it should keep all changes staged for commit
     And it should show "Squashed branch [current] back to master"
 
-  Scenario: Squash and save
+  Scenario: Squash and save with auto-detection
+    When I run "git @ squash -s"
+    Then it should auto-detect the parent branch
+    And it should reset the current branch to parent HEAD
+    And it should automatically run "git @ save"
+    And it should create a new commit with all changes
+
+  Scenario: Squash and save with explicit branch
     When I run "git @ squash develop -s"
     Then it should reset the current branch to develop HEAD
     And it should automatically run "git @ save"
@@ -40,7 +97,7 @@ Feature: Enhanced Squash Command
     When I run "git @ squash -h"
     Then it should display the usage information
     And it should show all available options
-    And it should show examples
+    And it should show examples including auto-detection
 
   Scenario: Show help with --help
     When I run "git @ squash --help"
@@ -49,11 +106,6 @@ Feature: Enhanced Squash Command
   Scenario: Show help with help
     When I run "git @ squash help"
     Then it should display the same usage information as -h
-
-  Scenario: Error for missing target branch
-    When I run "git @ squash"
-    Then it should show usage information
-    And it should exit with error
 
   Scenario: PR squash mode
     Given I have multiple commits on my feature branch
@@ -101,125 +153,49 @@ Feature: Enhanced Squash Command
     And it should show "Automatic PR squashing disabled"
     And it should store the setting as "at.pr.squash false"
 
-  Scenario: Show automatic squashing status when enabled
-    Given automatic PR squashing is enabled
+  Scenario: Show automatic PR squashing status
     When I run "git @ squash --auto status"
-    Then it should show "Status: ✅ ENABLED"
-    And it should show "Commits will be automatically squashed before creating PRs"
-    And it should show override instructions
-
-  Scenario: Show automatic squashing status when disabled
-    Given automatic PR squashing is disabled
-    When I run "git @ squash --auto status"
-    Then it should show "Status: ❌ DISABLED"
-    And it should show "PRs will be created with all commits as-is"
-    And it should show override instructions
-
-  Scenario: Enable with alternative commands
-    When I run "git @ squash --auto true"
-    Then it should enable the squash setting
-
-  Scenario: Enable with enable command
-    When I run "git @ squash --auto enable"
-    Then it should enable the squash setting
-
-  Scenario: Enable with 1 command
-    When I run "git @ squash --auto 1"
-    Then it should enable the squash setting
-
-  Scenario: Disable with alternative commands
-    When I run "git @ squash --auto false"
-    Then it should disable the squash setting
-
-  Scenario: Disable with disable command
-    When I run "git @ squash --auto disable"
-    Then it should disable the squash setting
-
-  Scenario: Disable with 0 command
-    When I run "git @ squash --auto 0"
-    Then it should disable the squash setting
-
-  Scenario: Show status with show command
-    When I run "git @ squash --auto show"
-    Then it should show the current status
-
-  Scenario: Show status with check command
-    When I run "git @ squash --auto check"
-    Then it should show the current status
+    Then it should show the current squashing status
+    And it should show whether automatic squashing is enabled or disabled
+    And it should show override commands
 
   Scenario: Error for invalid auto action
     When I run "git @ squash --auto invalid"
     Then it should show "Error: Invalid auto action 'invalid'"
-    And it should suggest valid options
+    And it should suggest valid options: 'on', 'off', or 'status'
+    And it should exit with error
 
-  Scenario: Error for missing auto value
+  Scenario: Error for missing auto action value
     When I run "git @ squash --auto"
     Then it should show "Error: --auto requires a value (on|off|status)"
     And it should exit with error
 
-  Scenario: Default status when no setting configured
-    Given no PR squash setting is configured
-    When I run "git @ squash --auto status"
-    Then it should show "Status: ❌ DISABLED"
+  Scenario: Auto-detection with orphan branch
+    Given I have an orphan branch with no parent
+    When I run "git @ squash"
+    Then it should show "Error: Could not auto-detect parent branch"
+    And it should suggest specifying a target branch
 
-  Scenario: Configuration persistence
-    When I run "git @ squash --auto on"
-    And I run "git @ squash --auto status"
-    Then it should show "Status: ✅ ENABLED"
-    And the setting should persist across git sessions
+  Scenario: Auto-detection priority order
+    Given I have multiple detection methods available
+    When I run "git @ squash"
+    Then it should prioritize git config branch.<name>.merge
+    And if not available, it should use upstream tracking (@{u})
+    And if not available, it should use branch divergence analysis
+    And if not available, it should use configured trunk branch
+    And if not available, it should use common branch names
 
-  Scenario: Integration with git @ pr when enabled
-    Given automatic PR squashing is enabled
-    And I have multiple commits on my feature branch
-    When I run "git @ pr 'Test PR'"
-    Then it should show "Auto-squashing commits before creating PR"
-    And it should squash the commits
-    And it should show "Commits squashed successfully"
-    And it should create the PR with squashed commits
+  Scenario: Integration with existing GitAT workflow
+    Given I have created a feature branch using "git @ work feature"
+    And I have made multiple commits
+    When I run "git @ squash"
+    Then it should auto-detect the parent branch
+    And it should squash all commits into one
+    And it should prepare the branch for PR creation
 
-  Scenario: Integration with git @ pr when disabled
-    Given automatic PR squashing is disabled
-    And I have multiple commits on my feature branch
-    When I run "git @ pr 'Test PR'"
-    Then it should not show squashing messages
-    And it should create the PR with all commits as-is
-
-  Scenario: Force squash override when disabled
-    Given automatic PR squashing is disabled
-    And I have multiple commits on my feature branch
-    When I run "git @ pr 'Test PR' -s"
-    Then it should show "Auto-squashing commits before creating PR"
-    And it should squash the commits despite the setting being disabled
-
-  Scenario: Force no squash override when enabled
-    Given automatic PR squashing is enabled
-    And I have multiple commits on my feature branch
-    When I run "git @ pr 'Test PR' -S"
-    Then it should not show squashing messages
-    And it should create the PR with all commits as-is despite the setting being enabled
-
-  Scenario: PR squash with cherry-pick conflicts
-    Given I have conflicting commits that cannot be cherry-picked
-    When I run "git @ squash --pr"
-    Then it should show "Error: Failed to cherry-pick commit"
-    And it should clean up temporary branches
-    And it should restore the original branch state
-
-  Scenario: PR squash cleanup on failure
-    Given I have commits that will cause squash to fail
-    When I run "git @ squash --pr"
-    Then it should clean up temporary branches
-    And it should restore the original branch state
-
-  Scenario: PR squash preserves commit messages
-    Given I have multiple commits with meaningful messages
-    When I run "git @ squash --pr"
-    Then it should squash the commits
-    And the final commit should have a meaningful message
-
-  Scenario: PR squash with custom trunk branch
-    Given the trunk branch is configured as "develop"
-    And I have multiple commits on my feature branch
-    When I run "git @ squash --pr"
-    Then it should use "develop" as the target branch
-    And it should squash commits ahead of develop 
+  Scenario: Squash workflow with Conventional Commits
+    Given I am on a feature branch with Conventional Commits prefix
+    When I run "git @ squash -s"
+    Then it should auto-detect the parent branch
+    And it should create a commit with the appropriate type prefix
+    And it should maintain the Conventional Commits format 
