@@ -113,17 +113,79 @@ save_work() {
     
     # Generate commit message with label and user message
     if [ "$#" -eq 1 ]; then
-        # User provided a message, combine with label
+        # User provided a message, combine with label and work type prefix
         local label
+        local work_type_prefix=""
+        
+        # Check if we're on a work type branch and add appropriate prefix
+        if [[ "$current" == "hotfix-"* ]]; then
+            work_type_prefix="[HOTFIX] "
+        elif [[ "$current" == "feature-"* ]]; then
+            work_type_prefix="[FEATURE] "
+        elif [[ "$current" == "bugfix-"* ]]; then
+            work_type_prefix="[BUGFIX] "
+        elif [[ "$current" == "release-"* ]]; then
+            work_type_prefix="[RELEASE] "
+        elif [[ "$current" == "chore-"* ]]; then
+            work_type_prefix="[CHORE] "
+        elif [[ "$current" == "docs-"* ]]; then
+            work_type_prefix="[DOCS] "
+        elif [[ "$current" == "style-"* ]]; then
+            work_type_prefix="[STYLE] "
+        elif [[ "$current" == "refactor-"* ]]; then
+            work_type_prefix="[REFACTOR] "
+        elif [[ "$current" == "perf-"* ]]; then
+            work_type_prefix="[PERF] "
+        elif [[ "$current" == "test-"* ]]; then
+            work_type_prefix="[TEST] "
+        elif [[ "$current" == "ci-"* ]]; then
+            work_type_prefix="[CI] "
+        elif [[ "$current" == "build-"* ]]; then
+            work_type_prefix="[BUILD] "
+        elif [[ "$current" == "revert-"* ]]; then
+            work_type_prefix="[REVERT] "
+        fi
+        
         label=$(git @ _label 2>/dev/null || echo "")
         if [ -n "$label" ]; then
-            message="${label} $1"
+            message="${work_type_prefix}${label} $1"
         else
-            message="$1"
+            message="${work_type_prefix}$1"
         fi
     else
-        # No user message, use default label
-        message=$(git @ _label 2>/dev/null || echo "Update")
+        # No user message, use default label with work type prefix
+        local work_type_prefix=""
+        
+        # Check if we're on a work type branch and add appropriate prefix
+        if [[ "$current" == "hotfix-"* ]]; then
+            work_type_prefix="[HOTFIX] "
+        elif [[ "$current" == "feature-"* ]]; then
+            work_type_prefix="[FEATURE] "
+        elif [[ "$current" == "bugfix-"* ]]; then
+            work_type_prefix="[BUGFIX] "
+        elif [[ "$current" == "release-"* ]]; then
+            work_type_prefix="[RELEASE] "
+        elif [[ "$current" == "chore-"* ]]; then
+            work_type_prefix="[CHORE] "
+        elif [[ "$current" == "docs-"* ]]; then
+            work_type_prefix="[DOCS] "
+        elif [[ "$current" == "style-"* ]]; then
+            work_type_prefix="[STYLE] "
+        elif [[ "$current" == "refactor-"* ]]; then
+            work_type_prefix="[REFACTOR] "
+        elif [[ "$current" == "perf-"* ]]; then
+            work_type_prefix="[PERF] "
+        elif [[ "$current" == "test-"* ]]; then
+            work_type_prefix="[TEST] "
+        elif [[ "$current" == "ci-"* ]]; then
+            work_type_prefix="[CI] "
+        elif [[ "$current" == "build-"* ]]; then
+            work_type_prefix="[BUILD] "
+        elif [[ "$current" == "revert-"* ]]; then
+            work_type_prefix="[REVERT] "
+        fi
+        
+        message="${work_type_prefix}$(git @ _label 2>/dev/null || echo "Update")"
     fi
     
     # Change to repository directory

@@ -10,13 +10,15 @@ fi
 
 version() {
     cat << 'EOF'
-GitAT - Git Workflow Management Tool v1.0.1
+GitAT - Git Workflow Management Tool v1.1.0
 
 A comprehensive Git plugin for secure workflow management with:
 ✅ Security-first design with input validation
 ✅ Semantic versioning management
 ✅ Branch workflow automation
 ✅ Release management tools
+✅ Pull Request creation with multi-platform support
+✅ Automatic commit squashing for clean PR history
 ✅ Comprehensive help system
 
 For help: git @ --help
@@ -50,13 +52,15 @@ issue [<id>]            # Set/get issue identifier
 Workflow Commands
 -----------------
 save [<message>]        # Securely save changes with validation
-work                    # Switch to working branch with stash management
+work <type> [<desc>]    # Create work branches (Conventional Commits)
 wip [options]           # Manage work-in-progress branch state
+pr [<title>] [options]  # Create Pull Request/Merge Request
+hotfix [<name>]         # Create hotfix branch from trunk
 
 Release Management
 ------------------
 release [options]       # Create releases with version bumping
-squash [options] <branch> # Clean commit history
+squash [options] <branch> # Clean commit history & PR preparation
 
 Utility Commands
 ----------------
@@ -79,6 +83,7 @@ hash                    # Show detailed branch status and relationships
 
 Branch Management
 -----------------
+branch [<name>]         # Manage working branch configuration & list work types
 master                  # Switch to master branch with stash
 root                    # Switch to trunk branch with stash
 sweep                   # Clean up merged branches
@@ -91,6 +96,15 @@ Security Features
 ✅ Security logging and monitoring
 ✅ Branch protection and confirmation prompts
 
+PR & Squash Features
+--------------------
+✅ Multi-platform PR creation (GitHub, GitLab, Bitbucket)
+✅ Automatic commit squashing for clean PR history
+✅ CLI tool integration with web URL fallback
+✅ Configurable automatic squashing settings
+✅ Force override options for one-time exceptions
+✅ Smart branch validation and error handling
+
 For detailed help on any command:
   git @ <command> --help
 
@@ -101,6 +115,15 @@ Examples:
   git @ save "Add login"        # Save changes securely
   git @ work                    # Switch to working branch
   git @ release -m              # Create minor release
+
+Enhanced Features:
+  git @ squash --pr             # Squash commits for PR preparation
+  git @ squash --auto on        # Enable automatic PR squashing
+  git @ pr "Add auth feature"   # Create PR with auto-squash (if enabled)
+  git @ pr -s "Force squash"    # Force squash before PR creation
+  git @ hotfix "fix-login-bug"  # Create hotfix branch from trunk
+  git @ work feature "auth"     # Create feature branch (Conventional Commits)
+  git @ branch --hotfix         # List all hotfix branches
 
 EOF
 }
