@@ -4,61 +4,36 @@
 format_branch_name() {
     local input="$1"
     
+    echo "Original input: '$input'"
+    
     # Convert to lowercase
     input=$(echo "$input" | tr '[:upper:]' '[:lower:]')
+    echo "After lowercase: '$input'"
     
     # Replace spaces, underscores, and other separators with hyphens
     input=$(echo "$input" | sed 's/[[:space:]_\.\/\\]+/-/g')
+    echo "After space replacement: '$input'"
     
     # Remove any non-alphanumeric characters except hyphens
     input=$(echo "$input" | sed 's/[^a-z0-9-]//g')
+    echo "After non-alphanumeric removal: '$input'"
     
     # Remove multiple consecutive hyphens
     input=$(echo "$input" | sed 's/--\+/-/g')
+    echo "After multiple hyphen removal: '$input'"
     
     # Remove leading and trailing hyphens
     input=$(echo "$input" | sed 's/^-\+//; s/-\+$//')
+    echo "After leading/trailing hyphen removal: '$input'"
     
     # If empty after formatting, use "update"
     if [ -z "$input" ]; then
         input="update"
     fi
     
+    echo "Final result: '$input'"
     echo "$input"
 }
 
-echo "Testing branch name formatting:"
-echo "================================"
-
-# Test cases
-echo "Input: 'Incorrect Branch Name'"
-echo "Output: '$(format_branch_name "Incorrect Branch Name")'"
-echo "Expected: 'incorrect-branch-name'"
-echo ""
-
-echo "Input: 'Fix Login Bug!'"
-echo "Output: '$(format_branch_name "Fix Login Bug!")'"
-echo "Expected: 'fix-login-bug'"
-echo ""
-
-echo "Input: 'Add User Authentication'"
-echo "Output: '$(format_branch_name "Add User Authentication")'"
-echo "Expected: 'add-user-authentication'"
-echo ""
-
-echo "Input: 'Update API Documentation'"
-echo "Output: '$(format_branch_name "Update API Documentation")'"
-echo "Expected: 'update-api-documentation'"
-echo ""
-
-echo "Input: 'Fix_Crash_On_Startup'"
-echo "Output: '$(format_branch_name "Fix_Crash_On_Startup")'"
-echo "Expected: 'fix-crash-on-startup'"
-echo ""
-
-echo "Input: 'Remove Old Code!!!'"
-echo "Output: '$(format_branch_name "Remove Old Code!!!")'"
-echo "Expected: 'remove-old-code'"
-echo ""
-
-echo "✅ Formatting function test complete!" 
+echo "Testing format_branch_name function:"
+format_branch_name "sweep command fixes" 

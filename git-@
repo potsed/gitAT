@@ -86,7 +86,7 @@ Branch Management
 branch [<name>]         # Manage working branch configuration & list work types
 master                  # Switch to master branch with stash
 root                    # Switch to trunk branch with stash
-sweep                   # Clean up merged branches
+sweep [options]         # Clean up merged + remote-deleted branches (default)
 
 Security Features
 -----------------
