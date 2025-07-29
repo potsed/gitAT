@@ -287,10 +287,47 @@ create_work_branch() {
     echo "  Base: $base_branch"
     echo "  Working branch: $(git config at.branch 2>/dev/null || echo 'not set')"
     echo ""
+    # Format work type for display
+    local display_type
+    case "$work_type" in
+        "hotfix") display_type="HOTFIX" ;;
+        "feature") display_type="FEATURE" ;;
+        "bugfix") display_type="BUGFIX" ;;
+        "release") display_type="RELEASE" ;;
+        "chore") display_type="CHORE" ;;
+        "docs") display_type="DOCS" ;;
+        "style") display_type="STYLE" ;;
+        "refactor") display_type="REFACTOR" ;;
+        "perf") display_type="PERF" ;;
+        "test") display_type="TEST" ;;
+        "ci") display_type="CI" ;;
+        "build") display_type="BUILD" ;;
+        "revert") display_type="REVERT" ;;
+        *) display_type="$(echo "$work_type" | tr '[:lower:]' '[:upper:]')" ;;
+    esac
+    
+    local title_type
+    case "$work_type" in
+        "hotfix") title_type="Hotfix" ;;
+        "feature") title_type="Feature" ;;
+        "bugfix") title_type="Bugfix" ;;
+        "release") title_type="Release" ;;
+        "chore") title_type="Chore" ;;
+        "docs") title_type="Docs" ;;
+        "style") title_type="Style" ;;
+        "refactor") title_type="Refactor" ;;
+        "perf") title_type="Perf" ;;
+        "test") title_type="Test" ;;
+        "ci") title_type="CI" ;;
+        "build") title_type="Build" ;;
+        "revert") title_type="Revert" ;;
+        *) title_type="$(echo "$work_type" | sed 's/^./\U&/')" ;;
+    esac
+    
     echo "Next steps:"
     echo "  1. Make your changes"
-    echo "  2. git @ save '[${work_type^^}] Description of changes'"
-    echo "  3. git @ pr '${work_type^}: Description of changes'"
+    echo "  2. git @ save '[$display_type] Description of changes'"
+    echo "  3. git @ pr '$title_type: Description of changes'"
     
     # Special guidance for different types
     case "$work_type" in
