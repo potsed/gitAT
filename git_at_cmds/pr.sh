@@ -260,16 +260,20 @@ generate_auto_description() {
     description+="<details>\n<summary>📋 Click to view all changed files</summary>\n\n"
     description+="```\n"
     
+    # Get file status information once
+    local file_status_info
+    file_status_info=$(git diff --name-status "$base_branch..$current_branch" 2>/dev/null || echo "")
+    
     while IFS= read -r file; do
         if [ -n "$file" ]; then
             # Get file status
-            local status
-            if git diff --name-status "$base_branch..$current_branch" | grep -q "^A.*$file$"; then
+            local status="✏️"  # Default to modified
+            
+            # Check if file was added or deleted
+            if echo "$file_status_info" | grep -q "^A.*$file$"; then
                 status="➕"
-            elif git diff --name-status "$base_branch..$current_branch" | grep -q "^D.*$file$"; then
+            elif echo "$file_status_info" | grep -q "^D.*$file$"; then
                 status="🗑️"
-            else
-                status="✏️"
             fi
             
             description+="$status $file\n"
@@ -288,12 +292,14 @@ generate_auto_description() {
         description+="<details>\n<summary>📜 Click to view commit history</summary>\n\n"
         description+="```\n"
         
-        # Show last 5 commits
-        git log --oneline -5 "$base_branch..$current_branch" 2>/dev/null | while IFS= read -r commit; do
-            if [ -n "$commit" ]; then
-                description+="$commit\n"
-            fi
-        done
+        # Get commit history once
+        local commit_history
+        commit_history=$(git log --oneline -5 "$base_branch..$current_branch" 2>/dev/null || echo "")
+        
+        # Add commits to description
+        if [ -n "$commit_history" ]; then
+            description+="$commit_history\n"
+        fi
         
         description+="```\n</details>\n\n"
     fi
