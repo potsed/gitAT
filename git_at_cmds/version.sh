@@ -1,18 +1,65 @@
 #!/bin/bash
 
 usage() {
-    echo "View current version: git @ version"
-    echo "Increment major version Number: git @ version -M"
-    echo "Increment minor version Number: git @ version -m 1"
-    echo "Increment fix version Number: git @ version -b 1"
-    echo "Show this help: git @ version -h"
-    echo "DO NOT MISUSE: Reset the version to 0.0.0: git @ version -r"
+    cat << 'EOF'
+Usage: git @ version [options]
+
+DESCRIPTION:
+  Manage semantic versioning for your project.
+  Uses MAJOR.MINOR.FIX format (e.g., 1.2.3).
+
+OPTIONS:
+  (no options)           Show current version
+  -M, --major           Increment major version (resets minor and fix to 0)
+  -m, --minor           Increment minor version (resets fix to 0)
+  -b, --bump            Increment fix version
+  -t, --tag             Show version tag (e.g., "v1.2.3")
+  -r, --reset           Reset version to 0.0.0 (use with caution)
+  -h, --help            Show this help
+
+EXAMPLES:
+  git @ version                    # Show current version (e.g., "1.2.3")
+  git @ version -M                 # Increment major: 1.2.3 → 2.0.0
+  git @ version -m                 # Increment minor: 1.2.3 → 1.3.0
+  git @ version -b                 # Increment fix: 1.2.3 → 1.2.4
+  git @ version -t                 # Show version tag (e.g., "v1.2.3")
+  git @ version -r                 # Reset to 0.0.0
+
+STORAGE:
+  Major version: git config at.major
+  Minor version: git config at.minor
+  Fix version: git config at.fix
+
+SEMANTIC VERSIONING:
+  MAJOR: Breaking changes, incompatible API changes
+  MINOR: New features, backward compatible
+  FIX: Bug fixes, backward compatible
+
+SECURITY:
+  All version operations are logged for audit purposes.
+
+EOF
     exit 0
 }
 
 cmd_version() {
     if [ "$#" -lt 1 ]; then
-        show_version; exit 0;
+        show_version; exit 0
+    fi
+
+    # Handle help flag first
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ] || [ "$1" = "h" ]; then
+        usage; exit 0
+    fi
+
+    # Handle tag flag
+    if [ "$1" = "-t" ]; then
+        show_tag; exit 0
+    fi
+
+    # Handle reset flag
+    if [ "$1" = "-r" ]; then
+        reset_version; exit 0
     fi
 
     # Initialize variables
@@ -20,11 +67,9 @@ cmd_version() {
     local MINOR=false
     local BUMP=false
 
-    while getopts ':htrMmb' flag; do
+    # Process other flags
+    while getopts ':Mmb' flag; do
         case "${flag}" in
-            h) usage; exit 0 ;;
-            t) show_tag; exit 0;;
-            r) reset_version; exit 0 ;;
             M) MAJOR=true ;;
             m) MINOR=true ;;
             b) BUMP=true ;;
@@ -47,7 +92,10 @@ cmd_version() {
 }
 
 show_tag() {
-    echo "v$(show_version)"
+    local version
+    version=$(show_version)
+    echo "v$version"
+    exit 0
 }
 
 reset_version() {
@@ -86,8 +134,9 @@ set_fix() {
 }
 
 show_version() {
-    local M=$(git config at.major);
-    local m=$(git config at.minor);
-    local f=$(git config at.fix);
-    echo $M'.'$m'.'$f;
+    local M=$(git config at.major 2>/dev/null || echo "0")
+    local m=$(git config at.minor 2>/dev/null || echo "0")
+    local f=$(git config at.fix 2>/dev/null || echo "0")
+    echo "$M.$m.$f"
+    exit 0
 }

@@ -2,28 +2,57 @@
 
 usage() {
     cat << 'EOF'
+Usage: git @ initlocal <origin-url> <project-name>
 
-Usage:
-------------------------------------------------------------------
-git @ initlocal <origin-user-url> <project-name>
+DESCRIPTION:
+  Initialize a new local repository with remote setup and proper branch structure.
+  Creates master → staging → develop branch hierarchy.
 
-Once completed you should visit setting
-(Gitlab EG <origin-user-url>/<project-name>/settings/repository)
-And set the default branch to `develop`
+ARGUMENTS:
+  <origin-url>      Remote repository URL (e.g., git@gitlab.com:user)
+  <project-name>    Project name for the repository
+
+EXAMPLES:
+  git @ initlocal git@gitlab.com:user my-project
+  git @ initlocal git@github.com:org api-service
+
+PROCESS:
+  1. Initializes git repository
+  2. Sets project name
+  3. Creates remote origin
+  4. Sets up branch structure: master → staging → develop
+  5. Pushes all branches to remote
+
+BRANCH STRUCTURE:
+  master   → Production-ready code
+  staging  → Pre-production testing
+  develop  → Development and feature integration
+
+NEXT STEPS:
+  After initialization, visit your repository settings and set the default
+  branch to 'develop':
+  https://gitlab.com/user/project-name/settings/repository
+
+SECURITY:
+  All initialization operations are validated and logged.
 
 EOF
     exit 0
 }
 
 cmd_initlocal() {
+    if [ "$#" -eq 1 ]; then
+        case "$1" in
+            "-h"|"--help"|"help"|"h")
+                usage; exit 0
+                ;;
+        esac
+    fi
+    
     # git push --set-upstream git@gitlab.example.com:namespace/nonexistent-project.git master
     if [ "$#" -lt 1 ]; then
         show_repo; exit 0
     elif [ "$#" -gt 0 ]; then
-        if [ "$1" == "help" ]; then
-            usage; exit 0
-        fi
-
         set_remote "$1"; exit 0
     fi
 

@@ -194,22 +194,19 @@ Run the comprehensive test suite to verify security features:
 
 ```bash
 # Run all tests
-npm test
+bash tests/run-all-tests.sh
 
 # Run security tests only
-npm run test:security
+bash tests/security.test.sh
 
 # Run integration tests
-npm run test:integration
+bash tests/integration.test.sh
 
 # Run unit tests
-npm run test:unit
+bash tests/unit.test.sh
 
 # Run shellcheck (requires shellcheck to be installed)
-npm run test:shellcheck
-
-# Run security audit
-npm run security:audit
+shellcheck git-@ git_at_cmds/*.sh
 ```
 
 ### Installing ShellCheck
@@ -233,6 +230,12 @@ sudo yum install epel-release
 sudo yum install shellcheck
 ```
 
+For Windows (with Chocolatey):
+
+```bash
+choco install shellcheck
+```
+
 ## Security Considerations
 
 - All inputs are validated against dangerous characters and patterns
@@ -250,13 +253,13 @@ The project includes a comprehensive test suite to ensure security and functiona
 
 ```bash
 # Run all tests
-npm test
+bash tests/run-all-tests.sh
 
 # Run specific test suites
-npm run test:unit      # Unit tests for security functions
-npm run test:security  # Security vulnerability tests
-npm run test:integration # End-to-end integration tests
-npm run test:shellcheck # Static analysis with ShellCheck
+bash tests/unit.test.sh      # Unit tests for security functions
+bash tests/security.test.sh  # Security vulnerability tests
+bash tests/integration.test.sh # End-to-end integration tests
+shellcheck git-@ git_at_cmds/*.sh # Static analysis with ShellCheck
 ```
 
 ### Contributing
@@ -264,7 +267,7 @@ npm run test:shellcheck # Static analysis with ShellCheck
 1. Fork the repository
 2. Create a feature branch: `git @ work`
 3. Make your changes
-4. Run tests: `npm test`
+4. Run tests: `bash tests/run-all-tests.sh`
 5. Commit your changes: `git @ save "Description of changes"`
 6. Push to your fork and submit a pull request
 

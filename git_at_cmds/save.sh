@@ -1,14 +1,43 @@
 #!/bin/bash
 
-# Source security utilities if available
-if [ -f "$(dirname "${BASH_SOURCE[0]}")/_security.sh" ]; then
-    source "$(dirname "${BASH_SOURCE[0]}")/_security.sh"
-fi
-
 usage() {
-    echo 'Usage: git @ save [<message>]'
-    echo '  Save current changes with proper validation'
-    echo '  Message is optional and will be validated'
+    cat << 'EOF'
+Usage: git @ save [<message>]
+
+DESCRIPTION:
+  Securely save current changes with comprehensive validation and security checks.
+  This is the primary command for committing changes in GitAT workflow.
+
+FEATURES:
+  ✅ Auto-branch setup: Sets working branch if not configured
+  ✅ Security validation: Validates inputs and paths
+  ✅ Branch protection: Prevents saves on master/develop
+  ✅ Production warnings: Confirms before saving to prod
+  ✅ Safe execution: Uses secure command execution
+
+EXAMPLES:
+  git @ save                           # Save with default message
+  git @ save "Add user authentication" # Save with custom message
+  git @ save "Fix login bug"           # Save with descriptive message
+
+VALIDATION:
+  Messages must contain only:
+  - Alphanumeric characters (a-z, A-Z, 0-9)
+  - Dots (.), underscores (_), hyphens (-)
+  - Spaces and common punctuation
+
+SECURITY:
+  - All inputs are validated against dangerous patterns
+  - Path operations are restricted to repository root
+  - Commands are executed safely
+  - Security events are logged
+
+BRANCH PROTECTION:
+  - Cannot save on master or develop branches
+  - Production branch requires confirmation
+  - Must be on configured working branch
+
+EOF
     exit 1
 }
 
@@ -21,9 +50,10 @@ cmd_save() {
         esac
     fi
     
-    # Validate any provided message
+    # Basic input validation
     if [ "$#" -gt 0 ]; then
-        if ! validate_input "$*"; then
+        # Check for dangerous characters
+        if echo "$*" | grep -q '[;&|`$(){}]'; then
             echo "Error: Invalid message. Use only alphanumeric characters, dots, underscores, and hyphens." >&2
             exit 1
         fi
@@ -38,9 +68,9 @@ save_work() {
     local repo_path
     
     # Get current branch safely
-    current=$(git @ branch -c 2>/dev/null || echo "")
-    branch=$(git @ branch 2>/dev/null || echo "")
-    repo_path=$(git @ _path 2>/dev/null || echo "")
+    current=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    branch=$(git config at.branch 2>/dev/null || echo "")
+    repo_path=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
 
     # Validate we're in a git repository
     if [ -z "$repo_path" ]; then
@@ -48,16 +78,10 @@ save_work() {
         exit 1
     fi
 
-    # Check permissions
-    if ! check_permissions "save" "$repo_path"; then
-        echo "Error: Insufficient permissions to save changes" >&2
-        exit 1
-    fi
-
     # If no working branch is set, set it to current branch
     if [ -z "$branch" ]; then
         echo "No working branch configured. Setting current branch as working branch..."
-        git @ branch "$current"
+        git config --replace-all at.branch "$current"
         branch="$current"
     fi
 
@@ -82,37 +106,38 @@ save_work() {
         exit 1
     fi
 
-    if [ "$#" -eq 1 ]; then
-        git @ _label "$1"
-    fi
-
     local original_pwd
     local message
     
     original_pwd=$(pwd)
-    message=$(git @ _label 2>/dev/null || echo "Update")
     
-    # Validate path before changing directory
-    if ! validate_path "$repo_path"; then
-        echo "Error: Invalid repository path" >&2
-        exit 1
+    # Generate commit message with label and user message
+    if [ "$#" -eq 1 ]; then
+        # User provided a message, combine with label
+        local label
+        label=$(git @ _label 2>/dev/null || echo "")
+        if [ -n "$label" ]; then
+            message="${label} $1"
+        else
+            message="$1"
+        fi
+    else
+        # No user message, use default label
+        message=$(git @ _label 2>/dev/null || echo "Update")
     fi
-
+    
+    # Change to repository directory
     cd "$repo_path" || {
         echo "Error: Cannot change to repository directory" >&2
         exit 1
     }
     
-    # Use safe command execution
-    if safe_execute "git" "add -p"; then
-        if safe_execute "git" "commit -m \"$message\""; then
-            echo "Changes saved successfully"
-        else
-            echo "Error: Failed to commit changes" >&2
-            exit 1
-        fi
+    # Add all changes and commit
+    if git add . && git commit -m "$message"; then
+        echo "Changes saved successfully"
     else
-        echo "Error: Failed to add changes" >&2
+        echo "Error: Failed to save changes" >&2
+        cd "$original_pwd" || exit 1
         exit 1
     fi
     

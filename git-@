@@ -9,92 +9,99 @@ if [ -f "$(dirname "$0")/git_at_cmds/_security.sh" ]; then
 fi
 
 version() {
-    echo "@ git plugin v1.0.1"
-    echo
+    cat << 'EOF'
+GitAT - Git Workflow Management Tool v1.0.1
+
+A comprehensive Git plugin for secure workflow management with:
+✅ Security-first design with input validation
+✅ Semantic versioning management
+✅ Branch workflow automation
+✅ Release management tools
+✅ Comprehensive help system
+
+For help: git @ --help
+For command help: git @ <command> --help
+
+EOF
 }
 
 usage() {
-    cat << EOF
+    cat << 'EOF'
 
 Usage:
 ================================================================================
 git @ <subcommand> [<options>]
 
-Most subcommands have help @ git @ <subcommand> --help for more details.
-
+All subcommands support --help for detailed information:
+  git @ <subcommand> --help
 
 Available Subcommands:
 ================================================================================
 
-Informative Subcommands
------------------------
-changes (git @ changes)
-    - Displays a list of files with any changes
+Configuration & Information
+---------------------------
+info                    # Show comprehensive GitAT status
+product [<name>]        # Set/get product name
+feature [<name>]        # Set/get feature name  
+version [options]       # Manage semantic versioning
+branch [<name>]         # Set/get working branch
+issue [<id>]            # Set/get issue identifier
 
-hash (git @ hash)
-    - Gets the hashes for remote and local branches
-    - Compares the local and remote branches hashes
+Workflow Commands
+-----------------
+save [<message>]        # Securely save changes with validation
+work                    # Switch to working branch with stash management
+wip [options]           # Manage work-in-progress branch state
 
-info (git @ info)
-    - Shows the current values for many of the GitAT sub-commands
+Release Management
+------------------
+release [options]       # Create releases with version bumping
+squash [options] <branch> # Clean commit history
 
-logs (git @ logs)
-    - Show the last 10 lines of logs in pretty format
+Utility Commands
+----------------
+_label [<label>]        # Manage commit labels [project.feature.issue]
+_trunk [<branch>]       # Set/get base branch (develop/master)
+_path                   # Get repository root path
+_id                     # Generate project identifier
+_go                     # Initialize GitAT for new repository
 
+Repository Management
+---------------------
+initlocal <url> <name>  # Initialize new repository with branch structure
+ignore <pattern>        # Add patterns to .gitignore
 
+Status & Analysis
+-----------------
+changes                 # Show uncommitted changes
+logs                    # Show recent commit history
+hash                    # Show detailed branch status and relationships
 
-Branch Helper Subcommands
--------------------------
-branch (git @ branch)
+Branch Management
+-----------------
+master                  # Switch to master branch with stash
+root                    # Switch to trunk branch with stash
+sweep                   # Clean up merged branches
 
-save
-    - Same as running git add .; git commit -m; but also checks you're in
-      the correct path.
+Security Features
+-----------------
+✅ Input validation against dangerous patterns
+✅ Path validation and restriction
+✅ Safe command execution
+✅ Security logging and monitoring
+✅ Branch protection and confirmation prompts
 
-wip
-    - Set the current branch as a work in progress so that you can work on
-      something else and come back to it later
+For detailed help on any command:
+  git @ <command> --help
 
-work
-    - Switch bewtween the set wip branch and master
+Examples:
+  git @ info                    # Show current status
+  git @ product gitAT           # Set product name
+  git @ feature user-auth       # Set feature name
+  git @ save "Add login"        # Save changes securely
+  git @ work                    # Switch to working branch
+  git @ release -m              # Create minor release
 
-
-
-Product Helper Subcommands
---------------------------
-feature (git @ feature <options> [<feature>])
-    - Sets and gets the feature you're working on in a branch
-
-issue
-    - Set the issue you're working on in the branch as part of the product workflow
-
-product
-    - Set and gets the product being worked on in this repo for use in
-      simplyfying commit messages etc.
-
-version
-    - Manage versioning information
-
-_id
-    - Gets a string made up of the version, major, and minor versions
-
-root
-    - Runs: git stash push --include-untracked -m "switched-to-{branch}"
-            git checkout {branch} # Set with git @ _trunk <branch>
-            git pull --rebase
-    NB. This does not reapply your stash
-
-squash (git @ squash branch)
-    - SOFT resets the commits of the current branch to the HEAD of the given BRANCH
-
-_trunk (git @ _trunk [<branch>])
-    - Holds/Sets the primary trunk (master|main|etc.) branch name
-
-_label
-    - A label in the format of [P.F.I] standing for Product, Feature, Issue
-
-_path
-    - Returns your local repo root path
 EOF
 }
 

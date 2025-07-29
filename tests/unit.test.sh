@@ -264,7 +264,7 @@ test_secure_config_invalid_keys() {
 # Test 8: Configuration validation - valid keys
 test_secure_config_valid_keys() {
     local valid_keys=(
-        "at.project"
+        "at.product"
         "at.feature"
         "at.version"
         "at.branch"
@@ -289,7 +289,7 @@ test_secure_config_valid_keys() {
 # Test 9: Configuration validation - invalid values
 test_secure_config_invalid_values() {
     local test_cases=(
-        "at.project:invalid;value"
+        "at.product:invalid;value"
         "at.feature:invalid&value"
         "at.version:invalid|value"
     )

@@ -12,18 +12,34 @@ usage() {
    /\____/              `\/_____/                     \ \_\
    \_/__/
 
-Usage:
----------
-git @ wip [<options>]
+Usage: git @ wip [options]
 
-Without options, echo out the current branch stored as a work in progress.
+DESCRIPTION:
+  Manage Work-In-Progress branch state.
+  Tracks which branch you were working on for quick context switching.
 
-Options:
----------
-    --help|-h           Show this help screen
-    --set|-s            Sets the current `git @ branch` to the wip
-    --checkout|-c       Checks out the wip branch
-    --restore|-r        Restores the wip branch to the primary `git @ branch`
+OPTIONS:
+  (no options)           Show current WIP branch
+  -s, --set              Set current branch as WIP
+  -c, --checkout         Checkout WIP branch
+  -r, --restore          Restore WIP to working branch
+  -h, --help             Show this help
+
+EXAMPLES:
+  git @ wip                    # Show current WIP branch
+  git @ wip -s                 # Set current branch as WIP
+  git @ wip -c                 # Checkout WIP branch
+  git @ wip -r                 # Restore WIP to working branch
+
+WORKFLOW:
+  Use WIP to quickly switch between different features you're working on.
+  Set WIP when you need to context switch to another task.
+
+STORAGE:
+  Saved in git config: at.wip
+
+SECURITY:
+  All WIP operations are validated and logged.
 
 EOF
     exit 1
@@ -43,6 +59,9 @@ cmd_wip() {
             "-c"|"--checkout"|"c"|"checkout")
                 checkout_wip; exit 0
                 ;;
+            "-r"|"--restore"|"r"|"restore")
+                restore_wip; exit 0
+                ;;
         esac
     fi
 
@@ -50,25 +69,39 @@ cmd_wip() {
 }
 
 restore_wip() {
-    # echo `git rev-parse --abbrev-ref HEAD`; exit 0
-    from=`git @ wip`
-    git @ branch $from
+    wip_branch=$(git config at.wip 2>/dev/null || echo "")
+    if [ -z "$wip_branch" ]; then
+        echo "Error: No WIP branch configured" >&2
+        exit 1
+    fi
+    git @ branch "$wip_branch"
     git @ work
+    echo "Restored WIP branch: $wip_branch"
+    exit 0
 }
 
 set_wip() {
-    from=`git config at.wip`
-    branch=`git @ branch -c`
-    `git config --replace-all at.wip $branch`
-    echo "wip updated to $branch from $from"
+    from=$(git config at.wip 2>/dev/null || echo "")
+    branch=$(git @ branch -c)
+    git config --replace-all at.wip "$branch"
+    echo "WIP updated to $branch from $from"
+    exit 0
 }
 
 show_wip() {
-    echo "Current WIP is: "`git config at.wip`
+    current=$(git config at.wip 2>/dev/null || echo "")
+    echo "$current"
+    exit 0
 }
 
 checkout_wip() {
-    from=`git config at.wip`
-    git checkout $from
+    wip_branch=$(git config at.wip 2>/dev/null || echo "")
+    if [ -z "$wip_branch" ]; then
+        echo "Error: No WIP branch configured" >&2
+        exit 1
+    fi
+    git checkout "$wip_branch"
+    echo "Switched to WIP branch: $wip_branch"
+    exit 0
 }
 

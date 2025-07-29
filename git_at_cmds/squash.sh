@@ -10,40 +10,43 @@ usage() {
  |___/            \____/            |_|
 
 
-Usage:
---------------------------------------------------------------------------------
-  git @ squash [options] <head_branch>
+Usage: git @ squash [options] <target-branch>
 
-Description:
---------------------------------------------------------------------------------
-  Reset the branch you're currently working in to the head of another branch
-  (usually develop or master) to make a clean commit without all of the
-  working history.
+DESCRIPTION:
+  Reset the current branch to the HEAD of another branch (usually develop or master)
+  to create a clean commit without working history. Useful for cleaning up before PR.
 
-  NB. You may have to force push your branch to the repo after squashing the
-  commits, if on a shared branch this may not be best option.
+OPTIONS:
+  -s, --save           Run 'git @ save' after squashing
+  -h, --help           Show this help
 
-  Why is it useful?
-  ----------------------
-  When you have been commiting locally for a period of time working on one
-  feature, then you may wish to clean up the repo before pushing it for PR
+EXAMPLES:
+  git @ squash develop              # Reset to develop HEAD
+  git @ squash master               # Reset to master HEAD
+  git @ squash develop -s           # Reset and save
 
-Options:
---------------------------------------------------------------------------------
-  --help|-h           Show this help screen
-  --save|-s           Run `git @ save` after squashing
+PROCESS:
+  1. Validates target branch exists
+  2. Retrieves HEAD SHA of target branch
+  3. Soft reset to target branch SHA
+  4. Keeps all changes staged for commit
+  5. Optionally runs 'git @ save'
 
-GIT Commands Used
---------------------------------------------------------------------------------
-  For transparency and education purposes I like to disclose the underlying
-  git commands being run during this operation.
+USE CASES:
+  - Clean up commit history before PR
+  - Remove intermediate commits from feature branch
+  - Create single clean commit from multiple commits
 
-  01. Retrieve the HEAD SHA of the given branch
-      CMD: `git rev-parse --verify --quiet --long ${BRANCH}`
+WARNING:
+  You may need to force push after squashing if branch is shared.
+  Use with caution on shared branches.
 
-  02. Resets the current branch to the SHA of the given branch without losing
-      any of the work you have done since that SHA
-      CMD: `git reset --soft ${SHA}`
+GIT COMMANDS USED:
+  - git rev-parse --verify --quiet --long ${BRANCH}
+  - git reset --soft ${SHA}
+
+SECURITY:
+  All squash operations are validated and logged.
 
 EOF
     exit 1
@@ -59,7 +62,7 @@ cmd_squash() {
     shift $(expr ${OPTIND} - 1)
 
     if [ "${1}" == "" ]; then
-        usage; exit 0;
+        usage; exit 0
     fi
 
     local HEAD="$(head "$1")"
@@ -67,13 +70,13 @@ cmd_squash() {
         echo
         echo "ERROR: Branch \"${1}\" does not exist locally"
         echo
-        exit 0;
+        exit 0
     fi
 
-    squash $HEAD;
+    squash "$HEAD"
 
     echo
-    echo 'Squashed branch '"$(git @ branch -c)"' back to '${1}
+    echo 'Squashed branch '"$(git @ branch -c)"' back to '"$1"
 
     if [ "${DOSAVE}" == "1" ]; then
         save
@@ -81,11 +84,11 @@ cmd_squash() {
 }
 
 head() {
-    local HEAD=$(git rev-parse --verify --quiet --long "$1");
+    local HEAD=$(git rev-parse --verify --quiet --long "$1")
     if [ "${HEAD}" != "" ]; then
-        echo ${HEAD};
+        echo "${HEAD}"
     else
-        echo 0;
+        echo "0"
     fi
 }
 
@@ -94,7 +97,7 @@ head() {
 # }
 
 squash() {
-    git reset --soft ${1}
+    git reset --soft "$1"
 }
 
 save() {

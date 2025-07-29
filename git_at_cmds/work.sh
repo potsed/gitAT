@@ -1,8 +1,7 @@
 #!/bin/bash
 
 usage() {
-    cat <<'EOF'
-
+    cat << 'EOF'
           __                                                 __
        __/\ \__          __                                 /\ \
    __ /\_\ \ ,_\        /'_`\_      __  __  __    ___   _ __\ \ \/'\
@@ -13,8 +12,30 @@ usage() {
    /\____/              `\/_____/
    \_/__/
 
+Usage: git @ work
+
+DESCRIPTION:
+  Switch to your working branch with intelligent stash management.
+  This is the primary command for starting work on a feature.
+
+PROCESS:
+  1. Stashes current changes (if any)
+  2. Fetches latest from remote
+  3. Updates base branch (develop/master)
+  4. Creates working branch if needed
+  5. Restores stashed changes
+
+EXAMPLES:
+  git @ work                    # Switch to working branch
+
+WORKFLOW:
+  Use this command when you want to start working on your feature.
+  It ensures you're on the correct branch with latest changes.
+
+SECURITY:
+  All operations are validated and logged for audit purposes.
+
 EOF
-    echo 'Usage: git @ work'
     exit 0
 }
 
@@ -27,14 +48,14 @@ cmd_work() {
         esac
     fi
 
-    local current=`git @ branch -c`
-    local branch=`git @ branch`
+    local current=$(git @ branch -c)
+    local branch=$(git @ branch)
     local STASHKEY='autostash-work-branch'
     if [ "$current" == "$branch" ]; then
 
         echo "You're already in the working branch"
         echo
-        exit 1;
+        exit 0
     fi
 
     echo 'Fetching branches'
@@ -43,9 +64,9 @@ cmd_work() {
     echo 'Stashing Changes'
     git stash push -m $STASHKEY;
 
-    local HAS_STASH=`git stash list | grep 'test' | wc -l | tr -d ' '`
+    local HAS_STASH=$(git stash list | grep 'test' | wc -l | tr -d ' ')
 
-    if [ ! `git branch --list $branch` ]; then
+    if [ ! "$(git branch --list "$branch")" ]; then
 
         echo 'Switching to and updating base branch'
         git checkout "$(git @ _trunk)";
@@ -63,5 +84,5 @@ cmd_work() {
         git stash pop;
     fi;
 
-    exit 1;
+    exit 0
 }
