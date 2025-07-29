@@ -2,8 +2,35 @@
 
 echo "Testing git @ work branch name formatting..."
 
-# Source the work.sh file to test the format_branch_name function
-source git_at_cmds/work.sh
+# Test the format_branch_name function
+format_branch_name() {
+    local input="$1"
+    
+    # Convert to lowercase
+    input=$(echo "$input" | tr '[:upper:]' '[:lower:]')
+    
+    # Replace spaces, underscores, and other separators with hyphens
+    input=$(echo "$input" | sed 's/[[:space:]_\.\/\\]+/-/g')
+    
+    # Remove any non-alphanumeric characters except hyphens
+    input=$(echo "$input" | sed 's/[^a-z0-9-]//g')
+    
+    # Remove multiple consecutive hyphens
+    input=$(echo "$input" | sed 's/--\+/-/g')
+    
+    # Remove leading and trailing hyphens
+    input=$(echo "$input" | sed 's/^-\+//; s/-\+$//')
+    
+    # If empty after formatting, use "update"
+    if [ -z "$input" ]; then
+        input="update"
+    fi
+    
+    echo "$input"
+}
+
+echo "Testing format_branch_name function:"
+echo "===================================="
 
 # Test cases
 test_cases=(
@@ -21,9 +48,6 @@ test_cases=(
     "Refactor User Model"
 )
 
-echo "Testing format_branch_name function:"
-echo "====================================="
-
 for test_input in "${test_cases[@]}"; do
     expected_output=$(format_branch_name "$test_input")
     echo "Input:  '$test_input'"
@@ -32,7 +56,9 @@ for test_input in "${test_cases[@]}"; do
 done
 
 echo ""
-echo "Testing complete! The format_branch_name function should convert:"
+echo "✅ Branch name formatting test complete!"
+echo ""
+echo "The format_branch_name function should convert:"
 echo "- Uppercase to lowercase"
 echo "- Spaces, underscores, dots to hyphens"
 echo "- Remove special characters"

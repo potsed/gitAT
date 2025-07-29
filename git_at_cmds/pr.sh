@@ -261,7 +261,7 @@ generate_auto_description() {
     description+="```\n"
     
     # Get file status information once
-    local file_status_info
+    local file_status_info=""
     file_status_info=$(git diff --name-status "$base_branch..$current_branch" 2>/dev/null || echo "")
     
     while IFS= read -r file; do
@@ -270,9 +270,9 @@ generate_auto_description() {
             local status="✏️"  # Default to modified
             
             # Check if file was added or deleted
-            if echo "$file_status_info" | grep -q "^A.*$file$"; then
+            if [ -n "$file_status_info" ] && echo "$file_status_info" | grep -q "^A.*$file$"; then
                 status="➕"
-            elif echo "$file_status_info" | grep -q "^D.*$file$"; then
+            elif [ -n "$file_status_info" ] && echo "$file_status_info" | grep -q "^D.*$file$"; then
                 status="🗑️"
             fi
             
@@ -293,7 +293,7 @@ generate_auto_description() {
         description+="```\n"
         
         # Get commit history once
-        local commit_history
+        local commit_history=""
         commit_history=$(git log --oneline -5 "$base_branch..$current_branch" 2>/dev/null || echo "")
         
         # Add commits to description
@@ -568,6 +568,16 @@ cmd_pr() {
     # Check if we're trying to create PR from trunk branch
     if [ "$current_branch" = "$base_branch" ]; then
         echo "Error: Cannot create PR from $base_branch to itself" >&2
+        exit 1
+    fi
+    
+    # Check if there are commits between the branches
+    local commit_count
+    commit_count=$(git rev-list --count "$base_branch..$current_branch" 2>/dev/null || echo "0")
+    
+    if [ "$commit_count" -eq 0 ]; then
+        echo "Error: No commits between $current_branch and $base_branch" >&2
+        echo "Cannot create a PR without any commits to merge." >&2
         exit 1
     fi
     
