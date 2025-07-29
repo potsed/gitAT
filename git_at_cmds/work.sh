@@ -72,7 +72,10 @@ format_branch_name() {
     input=$(echo "$input" | tr '[:upper:]' '[:lower:]')
     
     # Replace spaces, underscores, and other separators with hyphens
-    input=$(echo "$input" | sed 's/[[:space:]_\.\/\\]+/-/g')
+    input=$(echo "$input" | sed 's/[[:space:]]/-/g')
+    input=$(echo "$input" | sed 's/_/-/g')
+    input=$(echo "$input" | sed 's/\./-/g')
+    input=$(echo "$input" | sed 's/\\/-/g')
     
     # Remove any non-alphanumeric characters except hyphens
     input=$(echo "$input" | sed 's/[^a-z0-9-]//g')
