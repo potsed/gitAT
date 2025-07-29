@@ -42,33 +42,6 @@ cmd_info() {
         esac
     fi
     
-    # Source all the required command files to get access to their functions
-    local SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    
-    # Source the command files to get access to their functions
-    source "$SCRIPT_DIR/product.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/version.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/feature.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/issue.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/branch.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/_path.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/_trunk.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/wip.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/_id.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/_label.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/hash.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/changes.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/logs.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/save.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/work.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/release.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/squash.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/sweep.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/ignore.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/initlocal.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/initremote.sh" 2>/dev/null || true
-    source "$SCRIPT_DIR/_go.sh" 2>/dev/null || true
-
     # Get current git status
     local CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
     local REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
@@ -76,18 +49,25 @@ cmd_info() {
     local UNCOMMITTED_CHANGES=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
     local STASH_COUNT=$(git stash list 2>/dev/null | wc -l | tr -d ' ')
 
-    # Call functions directly instead of using git @ commands
-    local PROJECT=$(cmd_product 2>/dev/null || echo "")
-    local VERSION=$(cmd_version 2>/dev/null || echo "")
-    local TAG=$(cmd_version -t 2>/dev/null || echo "")
-    local FEATURE=$(cmd_feature 2>/dev/null || echo "")
-    local ISSUE=$(cmd_issue 2>/dev/null || echo "")
-    local BRANCH=$(cmd_branch 2>/dev/null || echo "")
-    local GITAT_PATH=$(cmd__path 2>/dev/null || echo "")
-    local TRUNK=$(cmd__trunk 2>/dev/null || echo "")
-    local WIP=$(cmd_wip 2>/dev/null || echo "")
-    local GITAT_ID=$(cmd__id 2>/dev/null || echo "")
-    local LABEL=$(cmd__label 2>/dev/null || echo "")
+    # Get GitAT configuration values directly from git config
+    local PROJECT=$(git config at.product 2>/dev/null || echo "")
+    local VERSION=$(git config at.version 2>/dev/null || echo "")
+    local TAG=$(git config at.version 2>/dev/null | sed 's/^/v/' 2>/dev/null || echo "")
+    local FEATURE=$(git config at.feature 2>/dev/null || echo "")
+    local ISSUE=$(git config at.task 2>/dev/null || echo "")
+    local BRANCH=$(git config at.branch 2>/dev/null || echo "")
+    local GITAT_PATH=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+    local TRUNK=$(git config at.trunk 2>/dev/null || echo "")
+    local WIP=$(git config at.wip 2>/dev/null || echo "")
+    local GITAT_ID=$(git config at.id 2>/dev/null || echo "")
+    
+    # Generate label from components
+    local LABEL=""
+    if [ -n "$PROJECT" ] || [ -n "$FEATURE" ] || [ -n "$ISSUE" ]; then
+        LABEL="[${PROJECT}.${FEATURE}.${ISSUE}]"
+    else
+        LABEL="[Update]"
+    fi
 
     cat << EOF
 
@@ -142,3 +122,6 @@ cmd_info() {
 EOF
     exit 0
 }
+
+# Run the command
+cmd_info "$@"

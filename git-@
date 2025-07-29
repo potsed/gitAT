@@ -100,6 +100,7 @@ PR & Squash Features
 --------------------
 ✅ Multi-platform PR creation (GitHub, GitLab, Bitbucket)
 ✅ Automatic commit squashing for clean PR history
+✅ Automatic description generation from changed files
 ✅ CLI tool integration with web URL fallback
 ✅ Configurable automatic squashing settings
 ✅ Force override options for one-time exceptions
@@ -120,7 +121,7 @@ Enhanced Features:
   git @ squash                   # Squash commits to parent branch (auto-detected)
   git @ squash --pr             # Squash commits for PR preparation
   git @ squash --auto on        # Enable automatic PR squashing
-  git @ pr "Add auth feature"   # Create PR with auto-squash (if enabled)
+  git @ pr "Add auth feature"   # Create PR with auto-description and auto-squash
   git @ pr -s "Force squash"    # Force squash before PR creation
   git @ hotfix "fix-login-bug"  # Create hotfix branch from trunk
   git @ work feature "auth"     # Create feature branch (Conventional Commits)

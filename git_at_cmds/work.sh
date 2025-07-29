@@ -33,15 +33,20 @@ EXAMPLES:
   git @ work bugfix "fix-crash-on-startup"    # Creates bugfix-fix-crash-on-startup
   git @ work docs "update-api-documentation"  # Creates docs-update-api-documentation
   git @ work chore "update-dependencies"      # Creates chore-update-dependencies
+  git @ work feature "Incorrect Branch Name"  # Creates feature-incorrect-branch-name
+  git @ work hotfix "Fix Login Bug!"          # Creates hotfix-fix-login-bug
 
 BRANCH NAMING:
   Format: <type>-<description>
+  Automatic formatting: Descriptions are automatically converted to kebab-case
   Examples:
     hotfix-fix-login-bug
     feature-add-user-auth
     bugfix-fix-crash-on-startup
     docs-update-api-documentation
     chore-update-dependencies
+    feature-incorrect-branch-name (from "Incorrect Branch Name")
+    hotfix-fix-login-bug (from "Fix Login Bug!")
 
 CONVENTIONAL COMMITS INTEGRATION:
   - Branch types follow Conventional Commits specification
@@ -57,6 +62,33 @@ WORKFLOW:
 
 EOF
     exit 1
+}
+
+# Format branch name to kebab-case
+format_branch_name() {
+    local input="$1"
+    
+    # Convert to lowercase
+    input=$(echo "$input" | tr '[:upper:]' '[:lower:]')
+    
+    # Replace spaces, underscores, and other separators with hyphens
+    input=$(echo "$input" | sed 's/[[:space:]_\.\/\\]+/-/g')
+    
+    # Remove any non-alphanumeric characters except hyphens
+    input=$(echo "$input" | sed 's/[^a-z0-9-]//g')
+    
+    # Remove multiple consecutive hyphens
+    input=$(echo "$input" | sed 's/--\+/-/g')
+    
+    # Remove leading and trailing hyphens
+    input=$(echo "$input" | sed 's/^-\+//; s/-\+$//')
+    
+    # If empty after formatting, use "update"
+    if [ -z "$input" ]; then
+        input="update"
+    fi
+    
+    echo "$input"
 }
 
 cmd_work() {
@@ -151,8 +183,12 @@ cmd_work() {
         fi
     fi
     
+    # Format description into kebab-case
+    local formatted_description
+    formatted_description=$(format_branch_name "$description")
+    
     # Create branch name
-    local branch_name="${work_type}-${description}"
+    local branch_name="${work_type}-${formatted_description}"
     
     # Special handling for hotfix - should come from trunk
     if [ "$work_type" = "hotfix" ]; then
@@ -302,5 +338,7 @@ validate_branch_name() {
     return 0
 }
 
-# Run the command
-cmd_work "$@"
+# Only run the command if this script is executed directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    cmd_work "$@"
+fi
