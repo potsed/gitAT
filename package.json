@@ -4,7 +4,13 @@
   "description": "Some helper commands for git",
   "main": "git-@",
   "scripts": {
-    "info": "git @"
+    "info": "git @",
+    "test": "bash tests/run-all-tests.sh",
+    "test:security": "bash tests/security.test.sh",
+    "test:integration": "bash tests/integration.test.sh",
+    "test:unit": "bash tests/unit.test.sh",
+    "test:shellcheck": "shellcheck git-@ git_at_cmds/*.sh",
+    "security:audit": "npm run test:security && npm run test:unit && npm run test:shellcheck"
   },
   "repository": {
     "type": "git",
@@ -13,12 +19,16 @@
   "keywords": [
     "Git",
     "Bash",
-    "Helpers"
+    "Helpers",
+    "Security"
   ],
   "author": "Daniel S <potsed@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/potsed/gitAT/issues"
   },
-  "homepage": "https://github.com/potsed/gitAT#readme"
+  "homepage": "https://github.com/potsed/gitAT#readme",
+  "devDependencies": {
+    "shellcheck": "^0.9.0"
+  }
 }

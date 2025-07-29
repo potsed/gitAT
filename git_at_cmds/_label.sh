@@ -18,7 +18,7 @@ cmd__label() {
 }
 
 set_label() {
-    `git config --replace-all at.label "$@ "`
+    git config --replace-all at.label "$*"
 
     echo 'Label updated to: '`git @ _label`
     return;

@@ -1,16 +1,33 @@
-cmd_info() {
+#!/bin/bash
 
-    local PROJECT=`git @ product`
-    local VERSION=`git @ version`
-    local TAG=`git @ version -t`
-    local FEATURE=`git @ feature`
-    local ISSUE=`git @ issue`
-    local BRANCH=`git @ branch`
-    local GITAT_PATH=`git @ _path`
-    local TRUNK=`git @ _trunk`
-    local WIP=`git @ wip`
-    local GITAT_ID=`git @ _id`
-    local LABEL=`git @ _label`
+cmd_info() {
+    # Source all the required command files to get access to their functions
+    local SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    
+    # Source the command files to get access to their functions
+    source "$SCRIPT_DIR/product.sh" 2>/dev/null || true
+    source "$SCRIPT_DIR/version.sh" 2>/dev/null || true
+    source "$SCRIPT_DIR/feature.sh" 2>/dev/null || true
+    source "$SCRIPT_DIR/issue.sh" 2>/dev/null || true
+    source "$SCRIPT_DIR/branch.sh" 2>/dev/null || true
+    source "$SCRIPT_DIR/_path.sh" 2>/dev/null || true
+    source "$SCRIPT_DIR/_trunk.sh" 2>/dev/null || true
+    source "$SCRIPT_DIR/wip.sh" 2>/dev/null || true
+    source "$SCRIPT_DIR/_id.sh" 2>/dev/null || true
+    source "$SCRIPT_DIR/_label.sh" 2>/dev/null || true
+
+    # Call functions directly instead of using git @ commands
+    local PROJECT=$(cmd_product 2>/dev/null || echo "")
+    local VERSION=$(cmd_version 2>/dev/null || echo "")
+    local TAG=$(cmd_version -t 2>/dev/null || echo "")
+    local FEATURE=$(cmd_feature 2>/dev/null || echo "")
+    local ISSUE=$(cmd_issue 2>/dev/null || echo "")
+    local BRANCH=$(cmd_branch 2>/dev/null || echo "")
+    local GITAT_PATH=$(cmd_path 2>/dev/null || echo "")
+    local TRUNK=$(cmd_trunk 2>/dev/null || echo "")
+    local WIP=$(cmd_wip 2>/dev/null || echo "")
+    local GITAT_ID=$(cmd_id 2>/dev/null || echo "")
+    local LABEL=$(cmd_label 2>/dev/null || echo "")
 
     cat << EOF
 
@@ -29,5 +46,5 @@ cmd_info() {
 | git @ _trunk         | ${TRUNK}
 
 EOF
-    exit 1
+    exit 0
 }

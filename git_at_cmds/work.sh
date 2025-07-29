@@ -1,3 +1,5 @@
+#!/bin/bash
+
 usage() {
     cat <<'EOF'
 
@@ -18,7 +20,7 @@ EOF
 
 cmd_work() {
     if [ "$#" -eq 1 ]; then
-        case $1 in
+        case "$1" in
             "-h"|"--help"|"help"|"h")
                 usage; exit 0
                 ;;

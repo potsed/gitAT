@@ -1,3 +1,5 @@
+#!/bin/bash
+
 cmd_sweep() {
     echo "Deleting local copies of branches merged into `git @ _trunk`"
     delete_merged_branches_locally;

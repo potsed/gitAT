@@ -1,4 +1,12 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
+
+# Security: Enable strict error handling
+set -euo pipefail
+
+# Source security utilities
+if [ -f "$(dirname "$0")/git_at_cmds/_security.sh" ]; then
+    source "$(dirname "$0")/git_at_cmds/_security.sh"
+fi
 
 version() {
     echo "@ git plugin v1.0.1"
@@ -8,18 +16,11 @@ version() {
 usage() {
     cat << EOF
 
-  __ _(_) |_      / __ \
- / _` | | __|    / / _` |
-| (_| | | |_    | | (_| |
- \__, |_|\__|    \ \__,_|
- |___/            \____/
-
-
 Usage:
 ================================================================================
 git @ <subcommand> [<options>]
 
-Most subcommands have help @ `git @ <subcommand> --help` for more details.
+Most subcommands have help @ git @ <subcommand> --help for more details.
 
 
 Available Subcommands:
@@ -37,7 +38,7 @@ hash (git @ hash)
 info (git @ info)
     - Shows the current values for many of the GitAT sub-commands
 
-logs
+logs (git @ logs)
     - Show the last 10 lines of logs in pretty format
 
 
@@ -47,7 +48,7 @@ Branch Helper Subcommands
 branch (git @ branch)
 
 save
-    - Same as running `git add .; git commit -m;` but also checks you're in
+    - Same as running git add .; git commit -m; but also checks you're in
       the correct path.
 
 wip
@@ -74,41 +75,17 @@ product
 version
     - Manage versioning information
 
-
-
-
-
-
-
 _id
     - Gets a string made up of the version, major, and minor versions
 
-
-
-
-
-
-
-
-
 root
-    - Runs: `git stash push --include-untracked -m "switched-to-${BASE}"`
-            `git checkout ${BASE}` # Set with `git @ _trunk <branch>`
-            `git pull --rebase`
+    - Runs: git stash push --include-untracked -m "switched-to-{branch}"
+            git checkout {branch} # Set with git @ _trunk <branch>
+            git pull --rebase
     NB. This does not reapply your stash
-
-
-
-
 
 squash (git @ squash branch)
     - SOFT resets the commits of the current branch to the HEAD of the given BRANCH
-
-
-
-
-
-
 
 _trunk (git @ _trunk [<branch>])
     - Holds/Sets the primary trunk (master|main|etc.) branch name
@@ -136,23 +113,35 @@ main() {
             version; exit 0
             ;;
         "-a"|"--all"|"a"|"all")
-            git @ info; exit 0
+            "$0" info; exit 0
             ;;
     esac
 
-    export WORKINGDIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
-    if [ ! -e "$WORKINGDIR/git_at_cmds/$subcommand.sh" ]; then
-        git $subcommand "$@"; exit 1
+    # Get the directory where this script is located
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+    
+    # If this is a symbolic link, follow it to find the actual script location
+    if [ -L "$0" ]; then
+        SCRIPT_DIR="$(cd "$(dirname "$(readlink "$0")")" && pwd)"
+    fi
+    
+    # Check if the subcommand file exists
+    if [ ! -e "$SCRIPT_DIR/git_at_cmds/$subcommand.sh" ]; then
+        git "$subcommand" "$@"; exit 1
     fi
 
-    source "$WORKINGDIR/git_at_cmds/$subcommand.sh"
+    # Load the subcommand script
+    source "$SCRIPT_DIR/git_at_cmds/$subcommand.sh"
 
-    local cmdtype=`type -t "cmd_$subcommand"`
+    # Check if the function exists
+    local cmdtype=$(type -t "cmd_$subcommand")
     if [ "$cmdtype" != "function" ]; then
+        echo "Error: Function cmd_$subcommand not found in $SCRIPT_DIR/git_at_cmds/$subcommand.sh" >&2
         usage; exit 1
     fi
 
-    cmd_$subcommand "$@"
+    # Call the function with all arguments
+    cmd_"$subcommand" "$@"
 }
 
 main "$@"

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 usage() {
     cat << 'EOF'
 
@@ -18,11 +20,11 @@ cmd_initlocal() {
     if [ "$#" -lt 1 ]; then
         show_repo; exit 0
     elif [ "$#" -gt 0 ]; then
-        if [ $1 == "help" ]; then
+        if [ "$1" == "help" ]; then
             usage; exit 0
         fi
 
-        set_remote $1; exit 0
+        set_remote "$1"; exit 0
     fi
 
     usage; exit 1

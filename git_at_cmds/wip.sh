@@ -1,3 +1,5 @@
+#!/bin/bash
+
 usage() {
     cat << 'EOF'
           __
@@ -31,7 +33,7 @@ cmd_wip() {
     if [ "$#" -lt 1 ]; then
         show_wip; exit 0
     elif [ "$#" -eq 1 ]; then
-        case $1 in
+        case "$1" in
             "-h"|"--help"|"help"|"h")
                 usage; exit 0
                 ;;

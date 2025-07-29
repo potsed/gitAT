@@ -1,3 +1,5 @@
+#!/bin/bash
+
 usage() {
     cat << 'EOF'
        _ _         ____                                _

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 cmd_master() {
     local current="$(git @ branch -c)"
     local base="$(git @ _trunk)"

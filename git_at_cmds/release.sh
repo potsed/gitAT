@@ -1,3 +1,5 @@
+#!/bin/bash
+
 usage() {
     cat << 'EOF'
 
@@ -41,7 +43,7 @@ cmd_release() {
 
 release() {
     # References https://stackoverflow.com/a/28804778
-    local RELEASE_TYPE=$1;
+    local RELEASE_TYPE="$1";
     local CURRENT_BRANCH=$(git @ branch -c);
     local HAS_CHANGES=$(git @ changes);
 

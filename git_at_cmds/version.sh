@@ -1,3 +1,5 @@
+#!/bin/bash
+
 usage() {
     echo "View current version: git @ version"
     echo "Increment major version Number: git @ version -M"
@@ -13,26 +15,31 @@ cmd_version() {
         show_version; exit 0;
     fi
 
+    # Initialize variables
+    local MAJOR=false
+    local MINOR=false
+    local BUMP=false
+
     while getopts ':htrMmb' flag; do
         case "${flag}" in
             h) usage; exit 0 ;;
             t) show_tag; exit 0;;
             r) reset_version; exit 0 ;;
-            M) local MAJOR=true ;;
-            m) local MINOR=true ;;
-            b) local BUMP=true ;;
+            M) MAJOR=true ;;
+            m) MINOR=true ;;
+            b) BUMP=true ;;
         esac
     done
 
-    if [[ $MAJOR ]]; then
+    if [[ "$MAJOR" == "true" ]]; then
         increment_major;
     fi
 
-    if [[ $MINOR ]]; then
+    if [[ "$MINOR" == "true" ]]; then
         increment_minor;
     fi
 
-    if [[ $BUMP ]]; then
+    if [[ "$BUMP" == "true" ]]; then
         increment_fix;
     fi
 
@@ -40,7 +47,7 @@ cmd_version() {
 }
 
 show_tag() {
-    echo "v`git @ version`"
+    echo "v$(show_version)"
 }
 
 reset_version() {
@@ -75,7 +82,7 @@ set_minor() {
 }
 
 set_fix() {
-    git config --replace-all at.fix $1;
+    git config --replace-all at.fix "$1";
 }
 
 show_version() {

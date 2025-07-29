@@ -1,3 +1,5 @@
+#!/bin/bash
+
 usage() {
     echo
     exit 1
@@ -7,7 +9,7 @@ cmd_branch() {
     if [ "$#" -lt 1 ]; then
         show_branch; exit 0
     elif [ "$#" -eq 1 ]; then
-        case $1 in
+        case "$1" in
             "-h"|"--help"|"help"|"h")
                 usage; exit 0
                 ;;
@@ -18,10 +20,10 @@ cmd_branch() {
                 current_branch; exit 0
                 ;;
             "-s"|"--set"|"s"|"set"|".")
-                set_branch `git branch --show-current`
+                set_branch "$(git branch --show-current)"
                 ;;
         esac
-        set_branch $1; exit 0
+        set_branch "$1"; exit 0
     fi
 
     usage; exit 1
@@ -32,17 +34,17 @@ new_working_branch() {
 }
 
 current_branch() {
-    echo `git rev-parse --abbrev-ref HEAD`; exit 0
+    git rev-parse --abbrev-ref HEAD; exit 0
 }
 
 set_branch() {
-    from=`git @ branch`
-    git config --replace-all at.branch $1
-    echo 'Branch updated to '`git @ branch`" from $from"
-    exit 1
+    from=$(git config at.branch 2>/dev/null || echo "")
+    git config --replace-all at.branch "$1"
+    echo 'Branch updated to '"$(git config at.branch)"' from '"$from"
+    exit 0
 }
 
 show_branch() {
-    echo `git config at.branch`
-    exit 1
+    git config at.branch
+    exit 0
 }

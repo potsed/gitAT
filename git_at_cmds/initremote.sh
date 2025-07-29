@@ -1,5 +1,7 @@
+#!/bin/bash
+
 cmd_initremote() {
-    echo $1;
+    echo "$1";
      if [ "$#" -lt 1 ]; then
         usage; exit 0
     elif [ "$#" -eq 1 ]; then
