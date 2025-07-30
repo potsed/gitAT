@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+
+# GitAT Git Extension
+# This script provides the 'git @' command interface to the Go binary
+
+version() {
+    cat << 'EOF'
+GitAT - Git Workflow Management Tool v1.1.0
+
+A comprehensive Git plugin for secure workflow management with:
+✅ Security-first design with input validation
+✅ Semantic versioning management
+✅ Branch workflow automation
+✅ Release management tools
+✅ Pull Request creation with multi-platform support
+✅ Automatic commit squashing for clean PR history
+✅ Comprehensive help system
+
+For help: git @ --help
+For command help: git @ <command> --help
+
+EOF
+}
+
+usage() {
+    cat << 'EOF'
+
+Usage:
+================================================================================
+git @ <subcommand> [<options>]
+
+All subcommands support --help for detailed information:
+  git @ <subcommand> --help
+
+Available Subcommands:
+================================================================================
+
+Configuration & Information
+---------------------------
+info                    # Show comprehensive GitAT status
+product [<name>]        # Set/get product name
+feature [<name>]        # Set/get feature name  
+version [options]       # Manage semantic versioning
+branch [<name>]         # Set/get working branch
+issue [<id>]            # Set/get issue identifier
+
+Workflow Commands
+-----------------
+save [<message>]        # Securely save changes with validation
+work <type> [<desc>]    # Create work branches (Conventional Commits)
+wip [options]           # Manage work-in-progress branch state
+pr [<title>] [options]  # Create Pull Request/Merge Request
+hotfix [<name>]         # Create hotfix branch from trunk
+
+Release Management
+------------------
+release [options]       # Create releases with version bumping
+squash [options] <branch> # Clean commit history & PR preparation
+
+Utility Commands
+----------------
+_label [<label>]        # Manage commit labels [project.feature.issue]
+_trunk [<branch>]       # Set/get base branch (develop/master)
+_path                   # Get repository root path
+_id                     # Generate project identifier
+_go                     # Initialize GitAT for new repository
+
+Repository Management
+---------------------
+initlocal <url> <name>  # Initialize new repository with branch structure
+ignore <pattern>        # Add patterns to .gitignore
+
+Status & Analysis
+-----------------
+changes                 # Show uncommitted changes
+logs                    # Show recent commit history
+hash                    # Show detailed branch status and relationships
+
+Branch Management
+-----------------
+branch [<name>]         # Manage working branch configuration & list work types
+master                  # Switch to master branch with stash
+root                    # Switch to trunk branch with stash
+sweep [options]         # Clean up merged + remote-deleted branches (default)
+
+Security Features
+-----------------
+✅ Input validation against dangerous patterns
+✅ Path validation and restriction
+✅ Safe command execution
+✅ Security logging and monitoring
+✅ Branch protection and confirmation prompts
+
+PR & Squash Features
+--------------------
+✅ Multi-platform PR creation (GitHub, GitLab, Bitbucket)
+✅ Automatic commit squashing for clean PR history
+✅ Automatic description generation from changed files
+✅ CLI tool integration with web URL fallback
+✅ Configurable automatic squashing settings
+✅ Force override options for one-time exceptions
+✅ Smart branch validation and error handling
+
+For detailed help on any command:
+  git @ <command> --help
+
+Examples:
+  git @ info                    # Show current status
+  git @ product gitAT           # Set product name
+  git @ feature user-auth       # Set feature name
+  git @ save "Add login"        # Save changes securely
+  git @ work                    # Switch to working branch
+  git @ release -m              # Create minor release
+
+Enhanced Features:
+  git @ squash                   # Squash commits to parent branch (auto-detected)
+  git @ squash --pr             # Squash commits for PR preparation
+  git @ squash --auto on        # Enable automatic PR squashing
+  git @ pr "Add auth feature"   # Create PR with auto-description and auto-squash
+  git @ pr -s "Force squash"    # Force squash before PR creation
+  git @ hotfix "fix-login-bug"  # Create hotfix branch from trunk
+  git @ work feature "auth"     # Create feature branch (Conventional Commits)
+  git @ branch --hotfix         # List all hotfix branches
+
+EOF
+}
+
+main() {
+    if [ "$#" -lt 1 ]; then
+        usage; exit 1
+    fi
+
+    local subcommand="$1"; shift
+
+    case $subcommand in
+        "-h"|"--help")
+            usage; exit 0
+            ;;
+        "-v"|"--version")
+            version; exit 0
+            ;;
+        "-a"|"--all"|"a"|"all")
+            gitat info; exit 0
+            ;;
+    esac
+
+    # Execute the Go binary with the subcommand and arguments
+    gitat "$subcommand" "$@"
+}
+
+main "$@"
