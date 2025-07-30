@@ -36,7 +36,7 @@ func (w *WIPHandler) Execute(args []string) error {
 	}
 
 	// Parse options
-	action := "save" // default action
+	action := ""
 	message := ""
 
 	for i, arg := range args {
@@ -56,6 +56,11 @@ func (w *WIPHandler) Execute(args []string) error {
 		case "clear", "clean":
 			action = "clear"
 		}
+	}
+
+	// If no action specified, show interactive form
+	if action == "" {
+		return w.showInteractiveForm()
 	}
 
 	switch action {
