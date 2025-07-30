@@ -25,17 +25,20 @@ func NewWorkHandler(cfg *config.Config, gitRepo *git.Repository) *WorkHandler {
 
 // Execute handles the work command
 func (w *WorkHandler) Execute(args []string) error {
-	if len(args) == 0 {
-		return w.showUsage()
-	}
-
-	if len(args) == 1 {
+	// Check for help flags
+	if len(args) > 0 {
 		switch args[0] {
 		case "-h", "--help", "help", "h":
 			return w.showUsage()
 		}
 	}
 
+	// If no arguments, show interactive form
+	if len(args) == 0 {
+		return w.showInteractiveForm()
+	}
+
+	// If arguments provided, use them directly
 	return w.createWorkBranch(args)
 }
 
@@ -497,4 +500,42 @@ git @ work bugfix
 - **Hotfix branches**: Automatically switch to trunk branch first
 - **Uncommitted changes**: Will prompt to save to WIP before creating branch
 `)
+}
+
+// showInteractiveForm shows an interactive form for creating work branches
+func (w *WorkHandler) showInteractiveForm() error {
+	var workType, description string
+
+	// Define work types
+	workTypes := []string{"feature", "bugfix", "hotfix", "release", "chore", "docs", "style", "refactor", "perf", "test", "ci", "build", "revert"}
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("Work Type").
+				Description("Select the type of work you're doing").
+				Options(huh.NewOptions(workTypes...)...).
+				Value(&workType),
+			huh.NewInput().
+				Title("Description").
+				Description("Describe what you're working on").
+				Placeholder("e.g., add user authentication").
+				Value(&description),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return fmt.Errorf("failed to show form: %w", err)
+	}
+
+	if workType == "" {
+		return fmt.Errorf("work type is required")
+	}
+
+	if description == "" {
+		return fmt.Errorf("description is required")
+	}
+
+	// Create the work branch with the form data
+	return w.createWorkBranch([]string{workType, description})
 }

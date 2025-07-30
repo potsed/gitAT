@@ -25,8 +25,14 @@ func NewWIPHandler(cfg *config.Config, gitRepo *git.Repository) *WIPHandler {
 
 // Execute handles the WIP command
 func (w *WIPHandler) Execute(args []string) error {
+	// Check for help flags
 	if len(args) > 0 && (args[0] == "-h" || args[0] == "--help" || args[0] == "help") {
 		return w.showUsage()
+	}
+
+	// If no arguments, show interactive form
+	if len(args) == 0 {
+		return w.showInteractiveForm()
 	}
 
 	// Parse options
@@ -267,7 +273,7 @@ func (w *WIPHandler) showUsage() error {
 		"## Actions\n\n" +
 		"- **save** (default): Save current work as WIP commit\n" +
 		"- **list**: List all WIP commits\n" +
-		"- **restore**: Restore a WIP commit\n" +
+		"- **restore**: Restore a WIP commit and remove it from history\n" +
 		"- **clear**: Clear all WIP commits\n\n" +
 		"## Arguments\n\n" +
 		"- **message**: Custom message for WIP commit\n" +
@@ -300,8 +306,9 @@ func (w *WIPHandler) showUsage() error {
 		"### Restoring WIP\n" +
 		"1. **Select**: Choose WIP commit to restore (interactive if not specified)\n" +
 		"2. **Confirm**: Prompt for user confirmation\n" +
-		"3. **Apply**: Cherry-pick the WIP commit\n" +
-		"4. **Result**: Show success message\n\n" +
+		"3. **Apply**: Restore changes to working directory\n" +
+		"4. **Remove**: Delete the WIP commit from history\n" +
+		"5. **Result**: Show success message\n\n" +
 		"### Clearing WIP\n" +
 		"1. **Count**: Determine number of WIP commits\n" +
 		"2. **Confirm**: Prompt for user confirmation\n" +
@@ -318,4 +325,41 @@ func (w *WIPHandler) showUsage() error {
 		"- Use descriptive messages for easier identification\n" +
 		"- Don't rely on WIP for long-term storage\n"
 	return output.Markdown(usage)
+}
+
+// showInteractiveForm shows an interactive form for WIP operations
+func (w *WIPHandler) showInteractiveForm() error {
+	var action string
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("WIP Action").
+				Description("What would you like to do?").
+				Options(
+					huh.NewOption("Save current work", "save"),
+					huh.NewOption("List WIP commits", "list"),
+					huh.NewOption("Restore WIP commit", "restore"),
+					huh.NewOption("Clear all WIP commits", "clear"),
+				).
+				Value(&action),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return fmt.Errorf("failed to show form: %w", err)
+	}
+
+	switch action {
+	case "save":
+		return w.saveWIP("")
+	case "list":
+		return w.listWIP()
+	case "restore":
+		return w.restoreWIP("")
+	case "clear":
+		return w.clearWIP()
+	default:
+		return w.saveWIP("")
+	}
 }
