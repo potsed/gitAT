@@ -707,7 +707,11 @@ func (m *Manager) saveWork(args []string) error {
 		return fmt.Errorf("failed to commit changes: %w", err)
 	}
 
-	output.Success("Changes saved successfully", "branch", currentBranch, "message", message)
+	fields := map[string]interface{}{
+		"branch":  currentBranch,
+		"message": message,
+	}
+	output.SuccessWithFields("Changes saved successfully", fields)
 	return nil
 }
 

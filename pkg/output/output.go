@@ -64,7 +64,12 @@ func Init() {
 
 // Success logs a success message using the logger
 func Success(format string, args ...interface{}) {
-	Logger.Info(fmt.Sprintf(format, args...), "type", "success")
+	Logger.Info(fmt.Sprintf(format, args...))
+}
+
+// SuccessWithFields logs a success message with additional fields
+func SuccessWithFields(message string, fields map[string]interface{}) {
+	Logger.Info(message, fields)
 }
 
 // Error logs an error message using the logger
