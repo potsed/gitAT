@@ -54,6 +54,10 @@ cd gitAT
 ./install.sh
 ```
 
+GitAT uses Git's built-in extension mechanism, so once installed, `git @` will be available as a native Git command. No aliases or additional configuration required!
+
+For more details on how the Git extension works, see [docs/GIT_EXTENSION.md](docs/GIT_EXTENSION.md).
+
 ## Quick Start
 
 1. **Initialize in a Git repository:**
