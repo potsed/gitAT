@@ -620,7 +620,7 @@ func (m *Manager) saveWork(args []string) error {
 
 	// If no working branch is set, set it to current branch
 	if workingBranch == "" {
-		fmt.Println("No working branch configured. Setting current branch as working branch...")
+		output.Info("No working branch configured. Setting current branch as working branch...")
 		err = m.git.SetConfig("at.branch", currentBranch)
 		if err != nil {
 			return fmt.Errorf("failed to set working branch: %w", err)
@@ -634,14 +634,22 @@ func (m *Manager) saveWork(args []string) error {
 	}
 
 	if currentBranch == "prod" {
-		fmt.Println("Warning: You are on the production branch!")
-		fmt.Print("Are you sure you want to commit this? (Y/N): ")
+		output.Warning("You are on the production branch!")
 
-		var confirmation string
-		fmt.Scanln(&confirmation)
+		// Use huh for confirmation
+		var confirmed bool
+		err = huh.NewConfirm().
+			Title("Production Commit").
+			Description("Are you sure you want to commit this to production?").
+			Value(&confirmed).
+			Run()
 
-		if !strings.HasPrefix(strings.ToLower(confirmation), "y") {
-			fmt.Println("Operation cancelled.")
+		if err != nil {
+			return fmt.Errorf("failed to show confirmation dialog: %w", err)
+		}
+
+		if !confirmed {
+			output.Info("Operation cancelled.")
 			return nil
 		}
 
@@ -654,7 +662,9 @@ func (m *Manager) saveWork(args []string) error {
 			tagName := fmt.Sprintf("v%s.%s.%s", major, minor, fix)
 			_, err = m.git.Run("tag", tagName)
 			if err != nil {
-				fmt.Printf("Warning: Failed to create version tag: %v\n", err)
+				output.Warning("Failed to create version tag: %v", err)
+			} else {
+				output.Info("Created version tag: %s", tagName)
 			}
 		}
 	} else if currentBranch != workingBranch {
@@ -697,7 +707,7 @@ func (m *Manager) saveWork(args []string) error {
 		return fmt.Errorf("failed to commit changes: %w", err)
 	}
 
-	fmt.Println("Changes saved successfully")
+	output.Success("Changes saved successfully", "branch", currentBranch, "message", message)
 	return nil
 }
 
@@ -1884,11 +1894,11 @@ DESCRIPTION:
   This is the primary command for committing changes in GitAT workflow.
 
 FEATURES:
-  ✅ Auto-branch setup: Sets working branch if not configured
-  ✅ Security validation: Validates inputs and paths
-  ✅ Branch protection: Prevents saves on master/develop
-  ✅ Production warnings: Confirms before saving to prod
-  ✅ Safe execution: Uses secure command execution
+  • Auto-branch setup: Sets working branch if not configured
+  • Security validation: Validates inputs and paths
+  • Branch protection: Prevents saves on master/develop
+  • Production warnings: Confirms before saving to prod
+  • Safe execution: Uses secure command execution
 
 EXAMPLES:
   git @ save                           # Save with default message
@@ -1897,20 +1907,20 @@ EXAMPLES:
 
 VALIDATION:
   Messages must contain only:
-  - Alphanumeric characters (a-z, A-Z, 0-9)
-  - Dots (.), underscores (_), hyphens (-)
-  - Spaces and common punctuation
+  • Alphanumeric characters (a-z, A-Z, 0-9)
+  • Dots (.), underscores (_), hyphens (-)
+  • Spaces and common punctuation
 
 SECURITY:
-  - All inputs are validated against dangerous patterns
-  - Path operations are restricted to repository root
-  - Commands are executed safely
-  - Security events are logged
+  • All inputs are validated against dangerous patterns
+  • Path operations are restricted to repository root
+  • Commands are executed safely
+  • Security events are logged
 
 BRANCH PROTECTION:
-  - Cannot save on master or develop branches
-  - Production branch requires confirmation
-  - Must be on configured working branch
+  • Cannot save on master or develop branches
+  • Production branch requires confirmation
+  • Must be on configured working branch
 `)
 	return nil
 }
@@ -1927,7 +1937,7 @@ func (m *Manager) setWIP() error {
 		return fmt.Errorf("failed to set WIP: %w", err)
 	}
 
-	fmt.Printf("WIP updated to %s from %s\n", currentBranch, oldWIP)
+	output.Info("WIP updated to %s from %s", currentBranch, oldWIP)
 	return nil
 }
 
@@ -1937,7 +1947,7 @@ func (m *Manager) setBranch(branchName string) error {
 	if err != nil {
 		return fmt.Errorf("failed to set branch: %w", err)
 	}
-	fmt.Printf("Branch updated to: %s from %s\n", branchName, oldBranch)
+	output.Info("Branch updated to: %s from %s", branchName, oldBranch)
 	return nil
 }
 
