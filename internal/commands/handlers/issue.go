@@ -25,8 +25,14 @@ func NewIssueHandler(cfg *config.Config, gitRepo *git.Repository) *IssueHandler 
 
 // Execute handles the issue command
 func (i *IssueHandler) Execute(args []string) error {
+	// Check for help flags
+	if len(args) > 0 && (args[0] == "-h" || args[0] == "--help" || args[0] == "help") {
+		return i.showUsage()
+	}
+
+	// If no arguments, show interactive form
 	if len(args) == 0 {
-		return i.showIssue()
+		return i.showInteractiveForm()
 	}
 
 	switch args[0] {
@@ -46,8 +52,6 @@ func (i *IssueHandler) Execute(args []string) error {
 			return fmt.Errorf("issue ID required for link command")
 		}
 		return i.linkIssue(args[1])
-	case "-h", "--help":
-		return i.showUsage()
 	default:
 		// If no subcommand, treat as set
 		return i.setIssue(strings.Join(args, " "))
@@ -355,4 +359,104 @@ Issue IDs are stored in Git configuration:
 `
 
 	return output.Markdown(usage)
+}
+
+// showInteractiveForm shows an interactive form for issue operations
+func (i *IssueHandler) showInteractiveForm() error {
+	var action string
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("Issue Action").
+				Description("What would you like to do?").
+				Options(
+					huh.NewOption("Show current issue", "get"),
+					huh.NewOption("Set issue ID", "set"),
+					huh.NewOption("Clear issue setting", "clear"),
+					huh.NewOption("List recent issues", "list"),
+					huh.NewOption("Link to issue", "link"),
+				).
+				Value(&action),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return fmt.Errorf("failed to show form: %w", err)
+	}
+
+	switch action {
+	case "get":
+		return i.showIssue()
+	case "set":
+		return i.showSetIssueForm()
+	case "clear":
+		return i.clearIssue()
+	case "list":
+		return i.listIssues()
+	case "link":
+		return i.showLinkIssueForm()
+	default:
+		return i.showIssue()
+	}
+}
+
+// showSetIssueForm shows a form to set the issue ID
+func (i *IssueHandler) showSetIssueForm() error {
+	var issueID string
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Title("Issue ID").
+				Description("Enter the issue ID (e.g., PROJ-123, #123)").
+				Placeholder("e.g., PROJ-123").
+				Value(&issueID).
+				Validate(func(s string) error {
+					if s == "" {
+						return fmt.Errorf("issue ID cannot be empty")
+					}
+					if !i.isValidIssueID(s) {
+						return fmt.Errorf("invalid issue ID format")
+					}
+					return nil
+				}),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return fmt.Errorf("failed to show form: %w", err)
+	}
+
+	return i.setIssue(issueID)
+}
+
+// showLinkIssueForm shows a form to link to an issue
+func (i *IssueHandler) showLinkIssueForm() error {
+	var issueID string
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Title("Issue ID").
+				Description("Enter the issue ID to link to").
+				Placeholder("e.g., PROJ-123").
+				Value(&issueID).
+				Validate(func(s string) error {
+					if s == "" {
+						return fmt.Errorf("issue ID cannot be empty")
+					}
+					if !i.isValidIssueID(s) {
+						return fmt.Errorf("invalid issue ID format")
+					}
+					return nil
+				}),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return fmt.Errorf("failed to show form: %w", err)
+	}
+
+	return i.linkIssue(issueID)
 }

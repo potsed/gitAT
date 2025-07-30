@@ -24,8 +24,14 @@ func NewProductHandler(cfg *config.Config, gitRepo *git.Repository) *ProductHand
 
 // Execute handles the product command
 func (p *ProductHandler) Execute(args []string) error {
+	// Check for help flags
+	if len(args) > 0 && (args[0] == "-h" || args[0] == "--help" || args[0] == "help") {
+		return p.showUsage()
+	}
+
+	// If no arguments, show interactive form
 	if len(args) == 0 {
-		return p.showProduct()
+		return p.showInteractiveForm()
 	}
 
 	switch args[0] {
@@ -38,8 +44,6 @@ func (p *ProductHandler) Execute(args []string) error {
 		return p.showProduct()
 	case "clear", "unset":
 		return p.clearProduct()
-	case "-h", "--help":
-		return p.showUsage()
 	default:
 		// If no subcommand, treat as set
 		return p.setProduct(strings.Join(args, " "))
@@ -227,4 +231,68 @@ Product names are stored in Git configuration:
 `
 
 	return output.Markdown(usage)
+}
+
+// showInteractiveForm shows an interactive form for product operations
+func (p *ProductHandler) showInteractiveForm() error {
+	var action string
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("Product Action").
+				Description("What would you like to do?").
+				Options(
+					huh.NewOption("Show current product", "get"),
+					huh.NewOption("Set product name", "set"),
+					huh.NewOption("Clear product setting", "clear"),
+				).
+				Value(&action),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return fmt.Errorf("failed to show form: %w", err)
+	}
+
+	switch action {
+	case "get":
+		return p.showProduct()
+	case "set":
+		return p.showSetProductForm()
+	case "clear":
+		return p.clearProduct()
+	default:
+		return p.showProduct()
+	}
+}
+
+// showSetProductForm shows a form to set the product name
+func (p *ProductHandler) showSetProductForm() error {
+	var productName string
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Title("Product Name").
+				Description("Enter the product name").
+				Placeholder("e.g., My Awesome Product").
+				Value(&productName).
+				Validate(func(s string) error {
+					if s == "" {
+						return fmt.Errorf("product name cannot be empty")
+					}
+					if !p.isValidProductName(s) {
+						return fmt.Errorf("invalid product name format")
+					}
+					return nil
+				}),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return fmt.Errorf("failed to show form: %w", err)
+	}
+
+	return p.setProduct(productName)
 }

@@ -24,12 +24,18 @@ func NewBranchHandler(cfg *config.Config, gitRepo *git.Repository) *BranchHandle
 
 // Execute handles the branch command
 func (s *BranchHandler) Execute(args []string) error {
+	// Check for help flags
 	if len(args) > 0 && (args[0] == "-h" || args[0] == "--help" || args[0] == "help") {
 		return s.showUsage()
 	}
 
+	// If no arguments, show interactive form
+	if len(args) == 0 {
+		return s.showInteractiveForm()
+	}
+
 	// Parse options
-	action := "list" // default action
+	action := ""
 	branchName := ""
 	force := false
 	remote := false
@@ -51,11 +57,18 @@ func (s *BranchHandler) Execute(args []string) error {
 			if i+1 < len(args) {
 				branchName = args[i+1]
 			}
+		case "list", "ls":
+			action = "list"
 		case "--force", "-f":
 			force = true
 		case "--remote", "-r":
 			remote = true
 		}
+	}
+
+	// If no action specified, show interactive form
+	if action == "" {
+		return s.showInteractiveForm()
 	}
 
 	switch action {
@@ -303,4 +316,155 @@ func (s *BranchHandler) showUsage() error {
 		"- Use force delete only when absolutely necessary\n" +
 		"- Switch to a safe branch before deleting others\n"
 	return output.Markdown(usage)
+}
+
+// showInteractiveForm shows an interactive form for branch operations
+func (s *BranchHandler) showInteractiveForm() error {
+	var action string
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("Branch Action").
+				Description("What would you like to do?").
+				Options(
+					huh.NewOption("List branches", "list"),
+					huh.NewOption("Create new branch", "create"),
+					huh.NewOption("Switch to branch", "switch"),
+					huh.NewOption("Delete branch", "delete"),
+				).
+				Value(&action),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return fmt.Errorf("failed to show form: %w", err)
+	}
+
+	switch action {
+	case "list":
+		return s.listBranches(false)
+	case "create":
+		return s.showCreateBranchForm()
+	case "switch":
+		return s.showSwitchBranchForm()
+	case "delete":
+		return s.showDeleteBranchForm()
+	default:
+		return s.listBranches(false)
+	}
+}
+
+// showCreateBranchForm shows a form to create a new branch
+func (s *BranchHandler) showCreateBranchForm() error {
+	var branchName string
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Title("Branch Name").
+				Description("Enter the name for the new branch").
+				Placeholder("e.g., feature/new-feature").
+				Value(&branchName).
+				Validate(func(s string) error {
+					if s == "" {
+						return fmt.Errorf("branch name cannot be empty")
+					}
+					return nil
+				}),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return fmt.Errorf("failed to show form: %w", err)
+	}
+
+	return s.createBranch(branchName, false)
+}
+
+// showSwitchBranchForm shows a form to switch to a branch
+func (s *BranchHandler) showSwitchBranchForm() error {
+	// Get available branches
+	branches, err := s.git.Run("branch", "--format=%(refname:short)")
+	if err != nil {
+		return fmt.Errorf("failed to get branches: %w", err)
+	}
+
+	branchList := strings.Split(strings.TrimSpace(branches), "\n")
+	var branchOptions []huh.Option[string]
+
+	for _, branch := range branchList {
+		branch = strings.TrimSpace(branch)
+		if branch != "" {
+			branchOptions = append(branchOptions, huh.NewOption(branch, branch))
+		}
+	}
+
+	if len(branchOptions) == 0 {
+		return fmt.Errorf("no branches available")
+	}
+
+	var selectedBranch string
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("Select Branch").
+				Description("Choose a branch to switch to").
+				Options(branchOptions...).
+				Value(&selectedBranch),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return fmt.Errorf("failed to show form: %w", err)
+	}
+
+	return s.switchBranch(selectedBranch)
+}
+
+// showDeleteBranchForm shows a form to delete a branch
+func (s *BranchHandler) showDeleteBranchForm() error {
+	// Get available branches (excluding current)
+	currentBranch, err := s.git.GetCurrentBranch()
+	if err != nil {
+		return fmt.Errorf("failed to get current branch: %w", err)
+	}
+
+	branches, err := s.git.Run("branch", "--format=%(refname:short)")
+	if err != nil {
+		return fmt.Errorf("failed to get branches: %w", err)
+	}
+
+	branchList := strings.Split(strings.TrimSpace(branches), "\n")
+	var branchOptions []huh.Option[string]
+
+	for _, branch := range branchList {
+		branch = strings.TrimSpace(branch)
+		if branch != "" && branch != currentBranch {
+			branchOptions = append(branchOptions, huh.NewOption(branch, branch))
+		}
+	}
+
+	if len(branchOptions) == 0 {
+		return fmt.Errorf("no branches available to delete")
+	}
+
+	var selectedBranch string
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("Select Branch to Delete").
+				Description("Choose a branch to delete (current branch excluded)").
+				Options(branchOptions...).
+				Value(&selectedBranch),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return fmt.Errorf("failed to show form: %w", err)
+	}
+
+	return s.deleteBranch(selectedBranch, false)
 }
