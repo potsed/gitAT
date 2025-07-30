@@ -59,6 +59,7 @@ func Init() {
 		ReportTimestamp: true,
 		Level:           log.InfoLevel,
 		Prefix:          "GitAT 🚀",
+		TimeFormat:      "15:04:05",
 	})
 }
 
@@ -69,7 +70,19 @@ func Success(format string, args ...interface{}) {
 
 // SuccessWithFields logs a success message with additional fields
 func SuccessWithFields(message string, fields map[string]interface{}) {
-	Logger.Info(message, fields)
+	// Convert map to key-value pairs for proper logging
+	var args []interface{}
+	for key, value := range fields {
+		args = append(args, key, value)
+	}
+	Logger.Info(message, args...)
+}
+
+// SaveSuccess logs a save operation with beautiful formatting
+func SaveSuccess(branch, message string) {
+	Success("Changes saved successfully")
+	Info("Branch: %s", branch)
+	Info("Commit: %s", message)
 }
 
 // Error logs an error message using the logger
