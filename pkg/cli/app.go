@@ -31,68 +31,16 @@ func (a *App) Run(args []string) error {
 	command := args[0]
 	commandArgs := args[1:]
 
+	// Handle help and version commands
 	switch command {
-	case "work":
-		return a.cmds.Work(commandArgs)
-	case "hotfix":
-		return a.cmds.Hotfix(commandArgs)
-	case "save":
-		return a.cmds.Save(commandArgs)
-	case "squash":
-		return a.cmds.Squash(commandArgs)
-	case "pr":
-		return a.cmds.PullRequest(commandArgs)
-	case "branch":
-		return a.cmds.Branch(commandArgs)
-	case "sweep":
-		return a.cmds.Sweep(commandArgs)
-	case "info":
-		return a.cmds.Info(commandArgs)
-	case "hash":
-		return a.cmds.Hash(commandArgs)
-	case "product":
-		return a.cmds.Product(commandArgs)
-	case "feature":
-		return a.cmds.Feature(commandArgs)
-	case "issue":
-		return a.cmds.Issue(commandArgs)
-	case "version":
-		return a.cmds.Version(commandArgs)
-	case "release":
-		return a.cmds.Release(commandArgs)
-	case "master", "root":
-		return a.cmds.Master(commandArgs)
-	case "wip":
-		return a.cmds.WIP(commandArgs)
-	case "changes":
-		return a.cmds.Changes(commandArgs)
-	case "logs":
-		return a.cmds.Logs(commandArgs)
-	case "_label":
-		return a.cmds.Label(commandArgs)
-	case "_id":
-		return a.cmds.ID(commandArgs)
-	case "_path":
-		return a.cmds.Path(commandArgs)
-	case "_trunk":
-		return a.cmds.Trunk(commandArgs)
-	case "ignore":
-		return a.cmds.Ignore(commandArgs)
-	case "initlocal":
-		return a.cmds.InitLocal(commandArgs)
-	case "initremote":
-		return a.cmds.InitRemote(commandArgs)
-	case "_security":
-		return a.cmds.Security(commandArgs)
-	case "_go":
-		return a.cmds.Go(commandArgs)
 	case "help", "-h", "--help":
 		return a.showUsage()
 	case "-v", "--version":
 		return a.showVersion()
-	default:
-		return fmt.Errorf("unknown command: %s", command)
 	}
+
+	// Execute the command using the new Manager structure
+	return a.cmds.Execute(command, commandArgs)
 }
 
 // showUsage displays the usage information
