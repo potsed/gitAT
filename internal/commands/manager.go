@@ -2,14 +2,18 @@ package commands
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/huh"
 	"github.com/potsed/gitAT/internal/config"
 	"github.com/potsed/gitAT/internal/git"
+	"github.com/potsed/gitAT/pkg/output"
 )
 
 // Manager handles all GitAT commands
@@ -24,6 +28,43 @@ func NewManager(cfg *config.Config) *Manager {
 		config: cfg,
 		git:    git.NewRepository(cfg.RepoPath),
 	}
+}
+
+// writeVersionLog writes version change logs to a file
+func (m *Manager) writeVersionLog(message string) error {
+	// Get git root directory
+	gitRoot, err := m.git.Run("rev-parse", "--show-toplevel")
+	if err != nil {
+		return fmt.Errorf("failed to get git root: %w", err)
+	}
+	gitRoot = strings.TrimSpace(gitRoot)
+
+	// Create logs directory if it doesn't exist
+	logsDir := filepath.Join(gitRoot, ".git", "gitat-logs")
+	if err := os.MkdirAll(logsDir, 0755); err != nil {
+		return fmt.Errorf("failed to create logs directory: %w", err)
+	}
+
+	// Create log file path
+	logFile := filepath.Join(logsDir, "version-changes.log")
+
+	// Open file in append mode, create if doesn't exist
+	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open log file: %w", err)
+	}
+	defer file.Close()
+
+	// Write log entry with timestamp
+	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	logEntry := fmt.Sprintf("[%s] %s\n", timestamp, message)
+
+	_, err = io.WriteString(file, logEntry)
+	if err != nil {
+		return fmt.Errorf("failed to write to log file: %w", err)
+	}
+
+	return nil
 }
 
 // Work handles the work command
@@ -700,35 +741,76 @@ func (m *Manager) Squash(args []string) error {
 		return m.squashToParent("", false)
 	}
 
-	if len(args) == 1 {
-		switch args[0] {
-		case "-h", "--help", "help", "h":
+	if len(args) >= 1 {
+		// Handle help first
+		if args[0] == "-h" || args[0] == "--help" || args[0] == "help" || args[0] == "h" {
 			return m.showSquashUsage()
-		case "-s", "--save":
-			return m.squashToParent("", true)
-		case "-p", "--pr":
-			return m.squashForPR()
-		case "-a", "--auto":
-			return fmt.Errorf("error: --auto requires a value (on|off|status)")
 		}
-	}
 
-	if len(args) == 2 {
-		switch args[0] {
-		case "-a", "--auto":
+		// Handle auto command (requires value)
+		if args[0] == "-a" || args[0] == "--auto" {
+			if len(args) < 2 {
+				return fmt.Errorf("error: --auto requires a value (on|off|status)")
+			}
 			return m.handleAutoSquash(args[1])
-		case "-s", "--save":
-			return m.squashToParent(args[1], true)
 		}
-	}
 
-	// Handle target branch argument
-	if len(args) == 1 {
-		return m.squashToParent(args[0], false)
-	}
+		// Parse flags for combined operations
+		var operations []string
+		var targetBranch string
 
-	if len(args) == 2 && args[0] == "-s" {
-		return m.squashToParent(args[1], true)
+		// Parse all arguments
+		for i := 0; i < len(args); i++ {
+			arg := args[i]
+
+			// Handle combined flags like -sp
+			if strings.HasPrefix(arg, "-") && len(arg) > 1 {
+				// Parse each character in the flag
+				for j := 1; j < len(arg); j++ {
+					switch arg[j] {
+					case 's':
+						operations = append(operations, "save")
+					case 'p':
+						operations = append(operations, "pr")
+					}
+				}
+			} else {
+				// Handle individual flags
+				switch arg {
+				case "-s", "--save":
+					operations = append(operations, "save")
+				case "-p", "--pr":
+					operations = append(operations, "pr")
+				}
+			}
+
+			// If this is not a flag and we haven't set targetBranch yet, it's the target
+			if !strings.HasPrefix(arg, "-") && targetBranch == "" && arg != "save" && arg != "pr" {
+				targetBranch = arg
+			}
+		}
+
+		// Execute operations
+		if len(operations) > 0 {
+			// Handle PR operation (takes precedence)
+			for _, op := range operations {
+				if op == "pr" {
+					return m.squashForPR()
+				}
+			}
+
+			// Handle save operation
+			for _, op := range operations {
+				if op == "save" {
+					return m.squashToParent(targetBranch, true)
+				}
+			}
+		}
+
+		// If no operations specified but we have a target branch
+		if targetBranch != "" {
+			return m.squashToParent(targetBranch, false)
+		}
 	}
 
 	return m.showSquashUsage()
@@ -1889,6 +1971,7 @@ OPTIONS:
 EXAMPLES:
   git @ squash                      # Squash to parent branch (auto-detected)
   git @ squash -s                   # Squash to parent and save
+  git @ squash -sp                  # Combined flags: squash and save, then PR
   git @ squash develop              # Squash to specific branch
   git @ squash master -s            # Squash to master and save
   git @ squash --pr                 # Squash for PR using trunk branch
@@ -2002,47 +2085,84 @@ func (m *Manager) Branch(args []string) error {
 		return m.showBranch()
 	}
 
-	if len(args) == 1 {
-		switch args[0] {
-		case "-h", "--help", "help", "h":
+	if len(args) >= 1 {
+		// Handle help first
+		if args[0] == "-h" || args[0] == "--help" || args[0] == "help" || args[0] == "h" {
 			return m.showBranchUsage()
-		case "-n", "--new", "n", "new":
-			return m.newWorkingBranch()
-		case "-c", "--current", "c", "current":
-			return m.currentBranch()
-		case "-s", "--set", "s", "set", ".":
-			return m.setBranchToCurrent()
-		case "--hotfix":
-			return m.listBranchesByType("hotfix-")
-		case "--feature":
-			return m.listBranchesByType("feature-")
-		case "--bugfix":
-			return m.listBranchesByType("bugfix-")
-		case "--release":
-			return m.listBranchesByType("release-")
-		case "--chore":
-			return m.listBranchesByType("chore-")
-		case "--docs":
-			return m.listBranchesByType("docs-")
-		case "--style":
-			return m.listBranchesByType("style-")
-		case "--refactor":
-			return m.listBranchesByType("refactor-")
-		case "--perf":
-			return m.listBranchesByType("perf-")
-		case "--test":
-			return m.listBranchesByType("test-")
-		case "--ci":
-			return m.listBranchesByType("ci-")
-		case "--build":
-			return m.listBranchesByType("build-")
-		case "--revert":
-			return m.listBranchesByType("revert-")
-		case "--all-types":
-			return m.listAllWorkTypes()
-		default:
-			// Set working branch to specified name
-			return m.setBranch(args[0])
+		}
+
+		// Parse flags for combined operations
+		var operations []string
+
+		// Parse all arguments
+		for _, arg := range args {
+			// Handle combined flags like -nc
+			if strings.HasPrefix(arg, "-") && len(arg) > 1 {
+				// Parse each character in the flag
+				for i := 1; i < len(arg); i++ {
+					switch arg[i] {
+					case 'n':
+						operations = append(operations, "new")
+					case 'c':
+						operations = append(operations, "current")
+					case 's':
+						operations = append(operations, "set")
+					}
+				}
+			} else {
+				// Handle individual flags
+				switch arg {
+				case "-n", "--new", "n", "new":
+					operations = append(operations, "new")
+				case "-c", "--current", "c", "current":
+					operations = append(operations, "current")
+				case "-s", "--set", "s", "set", ".":
+					operations = append(operations, "set")
+				case "--hotfix":
+					return m.listBranchesByType("hotfix-")
+				case "--feature":
+					return m.listBranchesByType("feature-")
+				case "--bugfix":
+					return m.listBranchesByType("bugfix-")
+				case "--release":
+					return m.listBranchesByType("release-")
+				case "--chore":
+					return m.listBranchesByType("chore-")
+				case "--docs":
+					return m.listBranchesByType("docs-")
+				case "--style":
+					return m.listBranchesByType("style-")
+				case "--refactor":
+					return m.listBranchesByType("refactor-")
+				case "--perf":
+					return m.listBranchesByType("perf-")
+				case "--test":
+					return m.listBranchesByType("test-")
+				case "--ci":
+					return m.listBranchesByType("ci-")
+				case "--build":
+					return m.listBranchesByType("build-")
+				case "--revert":
+					return m.listBranchesByType("revert-")
+				case "--all-types":
+					return m.listAllWorkTypes()
+				default:
+					// Set working branch to specified name
+					return m.setBranch(arg)
+				}
+			}
+		}
+
+		// Execute operations (only the first one, as these are mutually exclusive)
+		if len(operations) > 0 {
+			switch operations[0] {
+			case "new":
+				return m.newWorkingBranch()
+			case "current":
+				return m.currentBranch()
+			case "set":
+				return m.setBranchToCurrent()
+			}
 		}
 	}
 
@@ -2246,6 +2366,7 @@ EXAMPLES:
   git @ branch -c                 # Show current Git branch
   git @ branch -s                 # Set working branch to current branch
   git @ branch -n                 # Create new feature branch
+  git @ branch -nc                # Combined flags (first operation takes precedence)
   git @ branch --hotfix           # List hotfix branches
   git @ branch --all-types        # List all work type branches
 
@@ -2567,29 +2688,133 @@ func (m *Manager) Version(args []string) error {
 		if err != nil {
 			return fmt.Errorf("failed to get version: %w", err)
 		}
-		fmt.Println(version)
+
+		output.Title("📦 GitAT Version")
+		output.Info("Current version: %s", version)
+
+		// Show version components
+		major, _ := m.git.GetConfig("at.major")
+		minor, _ := m.git.GetConfig("at.minor")
+		fix, _ := m.git.GetConfig("at.fix")
+
+		output.Table(
+			[]string{"Component", "Value"},
+			[][]string{
+				{"Major", major},
+				{"Minor", minor},
+				{"Fix", fix},
+			},
+		)
+
 		return nil
 	}
 
-	if len(args) == 1 {
-		switch args[0] {
-		case "-h", "--help", "help", "h":
+	if len(args) >= 1 {
+		// Handle help first
+		if args[0] == "-h" || args[0] == "--help" || args[0] == "help" || args[0] == "h" {
 			return m.showVersionUsage()
-		case "-M", "--major":
-			return m.incrementMajor()
-		case "-m", "--minor":
-			return m.incrementMinor()
-		case "-b", "--bump":
-			return m.incrementFix()
-		case "-t", "--tag":
+		}
+
+		// Handle tag and reset (these are single operations)
+		if args[0] == "-t" || args[0] == "--tag" {
 			version, err := m.getVersion()
 			if err != nil {
 				return fmt.Errorf("failed to get version: %w", err)
 			}
-			fmt.Printf("v%s\n", version)
+			output.Code("v" + version)
 			return nil
-		case "-r", "--reset":
+		}
+
+		if args[0] == "--reset" {
 			return m.resetVersion()
+		}
+
+		if args[0] == "--set" {
+			return m.setVersion()
+		}
+
+		// Handle multiple increment flags
+		var operations []string
+
+		// Parse all arguments for increment operations
+		for _, arg := range args {
+			// Handle combined flags like -Mmb
+			if strings.HasPrefix(arg, "-") && len(arg) > 1 {
+				// Parse each character in the flag
+				for i := 1; i < len(arg); i++ {
+					switch arg[i] {
+					case 'M':
+						operations = append(operations, "major")
+					case 'm':
+						operations = append(operations, "minor")
+					case 'b':
+						operations = append(operations, "fix")
+					}
+				}
+			} else {
+				// Handle individual flags
+				switch arg {
+				case "-M", "--major":
+					operations = append(operations, "major")
+				case "-m", "--minor":
+					operations = append(operations, "minor")
+				case "-b", "--bump":
+					operations = append(operations, "fix")
+				}
+			}
+		}
+
+		// Execute operations in order: major, minor, fix
+		if len(operations) > 0 {
+			// Sort operations to ensure correct order
+			orderedOps := make([]string, 0)
+
+			// Add major first if present
+			for _, op := range operations {
+				if op == "major" {
+					orderedOps = append(orderedOps, op)
+				}
+			}
+
+			// Add minor second if present
+			for _, op := range operations {
+				if op == "minor" {
+					orderedOps = append(orderedOps, op)
+				}
+			}
+
+			// Add fix last if present
+			for _, op := range operations {
+				if op == "fix" {
+					orderedOps = append(orderedOps, op)
+				}
+			}
+
+			// Execute operations
+			for _, op := range orderedOps {
+				switch op {
+				case "major":
+					if err := m.incrementMajor(); err != nil {
+						return err
+					}
+				case "minor":
+					if err := m.incrementMinor(); err != nil {
+						return err
+					}
+				case "fix":
+					if err := m.incrementFix(); err != nil {
+						return err
+					}
+				}
+			}
+
+			// Show final version
+			version, err := m.getVersion()
+			if err != nil {
+				return fmt.Errorf("failed to get final version: %w", err)
+			}
+			output.Info("Final version: %s", version)
+			return nil
 		}
 	}
 
@@ -2616,7 +2841,35 @@ func (m *Manager) getVersion() (string, error) {
 }
 
 func (m *Manager) resetVersion() error {
-	err := m.git.SetConfig("at.major", "0")
+	// Get current version for logging
+	currentVersion, err := m.getVersion()
+	if err != nil {
+		currentVersion = "unknown"
+	}
+
+	// Show warning and confirmation
+	output.Warning("⚠️  This will reset version from %s to 0.0.0", currentVersion)
+	output.Info("This action cannot be undone!")
+
+	// Use huh for confirmation
+	var confirmed bool
+	err = huh.NewConfirm().
+		Title("Reset Version").
+		Description("Are you sure you want to reset the version to 0.0.0?").
+		Value(&confirmed).
+		Run()
+
+	if err != nil {
+		return fmt.Errorf("failed to show confirmation dialog: %w", err)
+	}
+
+	if !confirmed {
+		output.Info("Version reset cancelled")
+		return nil
+	}
+
+	// Reset version components
+	err = m.git.SetConfig("at.major", "0")
 	if err != nil {
 		return fmt.Errorf("failed to reset major version: %w", err)
 	}
@@ -2631,7 +2884,128 @@ func (m *Manager) resetVersion() error {
 		return fmt.Errorf("failed to reset fix version: %w", err)
 	}
 
-	fmt.Println("Version reset to 0.0.0")
+	// Log the change
+	output.Success("Version reset from %s to 0.0.0", currentVersion)
+
+	// Log to file for audit trail
+	logMessage := fmt.Sprintf("Version reset from %s to 0.0.0", currentVersion)
+	err = m.writeVersionLog(logMessage)
+	if err != nil {
+		output.Warning("Failed to log version reset: %v", err)
+	}
+
+	return nil
+}
+
+func (m *Manager) setVersion() error {
+	// Get current version for comparison
+	currentVersion, err := m.getVersion()
+	if err != nil {
+		currentVersion = "0.0.0"
+	}
+
+	output.Title("🎯 Set Version")
+	output.Info("Current version: %s", currentVersion)
+
+	// Create form fields for version components
+	var major, minor, fix string
+
+	// Get current values as defaults
+	currentMajor, _ := m.git.GetConfig("at.major")
+	currentMinor, _ := m.git.GetConfig("at.minor")
+	currentFix, _ := m.git.GetConfig("at.fix")
+
+	if currentMajor == "" {
+		currentMajor = "0"
+	}
+	if currentMinor == "" {
+		currentMinor = "0"
+	}
+	if currentFix == "" {
+		currentFix = "0"
+	}
+
+	// Create the form
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Title("Major Version").
+				Description("Breaking changes, incompatible API changes").
+				Value(&major).
+				Placeholder(currentMajor).
+				Validate(func(s string) error {
+					if s == "" {
+						return fmt.Errorf("major version cannot be empty")
+					}
+					if _, err := strconv.Atoi(s); err != nil {
+						return fmt.Errorf("major version must be a number")
+					}
+					return nil
+				}),
+			huh.NewInput().
+				Title("Minor Version").
+				Description("New features, backward compatible").
+				Value(&minor).
+				Placeholder(currentMinor).
+				Validate(func(s string) error {
+					if s == "" {
+						return fmt.Errorf("minor version cannot be empty")
+					}
+					if _, err := strconv.Atoi(s); err != nil {
+						return fmt.Errorf("minor version must be a number")
+					}
+					return nil
+				}),
+			huh.NewInput().
+				Title("Fix Version").
+				Description("Bug fixes, backward compatible").
+				Value(&fix).
+				Placeholder(currentFix).
+				Validate(func(s string) error {
+					if s == "" {
+						return fmt.Errorf("fix version cannot be empty")
+					}
+					if _, err := strconv.Atoi(s); err != nil {
+						return fmt.Errorf("fix version must be a number")
+					}
+					return nil
+				}),
+		),
+	)
+
+	// Run the form
+	if err := form.Run(); err != nil {
+		return fmt.Errorf("failed to show version form: %w", err)
+	}
+
+	// Set the version components
+	err = m.git.SetConfig("at.major", major)
+	if err != nil {
+		return fmt.Errorf("failed to set major version: %w", err)
+	}
+
+	err = m.git.SetConfig("at.minor", minor)
+	if err != nil {
+		return fmt.Errorf("failed to set minor version: %w", err)
+	}
+
+	err = m.git.SetConfig("at.fix", fix)
+	if err != nil {
+		return fmt.Errorf("failed to set fix version: %w", err)
+	}
+
+	newVersion := fmt.Sprintf("%s.%s.%s", major, minor, fix)
+
+	// Log the change
+	output.Success("Version set from %s to %s", currentVersion, newVersion)
+
+	// Log to file for audit trail
+	logMessage := fmt.Sprintf("Version set from %s to %s", currentVersion, newVersion)
+	err = m.writeVersionLog(logMessage)
+	if err != nil {
+		output.Warning("Failed to log version set: %v", err)
+	}
+
 	return nil
 }
 
@@ -2663,7 +3037,22 @@ func (m *Manager) incrementMajor() error {
 		return fmt.Errorf("failed to reset fix version: %w", err)
 	}
 
-	fmt.Printf("Major version incremented: %d.0.0\n", newMajor)
+	// Get current version for logging
+	currentVersion, err := m.getVersion()
+	if err != nil {
+		currentVersion = "unknown"
+	}
+	newVersion := fmt.Sprintf("%d.0.0", newMajor)
+
+	output.Success("Major version incremented to %s", newVersion)
+
+	// Log to file for audit trail
+	logMessage := fmt.Sprintf("Major version incremented from %s to %s", currentVersion, newVersion)
+	err = m.writeVersionLog(logMessage)
+	if err != nil {
+		output.Warning("Failed to log version increment: %v", err)
+	}
+
 	return nil
 }
 
@@ -2695,7 +3084,22 @@ func (m *Manager) incrementMinor() error {
 		major = "0"
 	}
 
-	fmt.Printf("Minor version incremented: %s.%d.0\n", major, newMinor)
+	// Get current version for logging
+	currentVersion, err := m.getVersion()
+	if err != nil {
+		currentVersion = "unknown"
+	}
+	newVersion := fmt.Sprintf("%s.%d.0", major, newMinor)
+
+	output.Success("Minor version incremented to %s", newVersion)
+
+	// Log to file for audit trail
+	logMessage := fmt.Sprintf("Minor version incremented from %s to %s", currentVersion, newVersion)
+	err = m.writeVersionLog(logMessage)
+	if err != nil {
+		output.Warning("Failed to log version increment: %v", err)
+	}
+
 	return nil
 }
 
@@ -2726,7 +3130,22 @@ func (m *Manager) incrementFix() error {
 		minor = "0"
 	}
 
-	fmt.Printf("Fix version incremented: %s.%s.%d\n", major, minor, newFix)
+	// Get current version for logging
+	currentVersion, err := m.getVersion()
+	if err != nil {
+		currentVersion = "unknown"
+	}
+	newVersion := fmt.Sprintf("%s.%s.%d", major, minor, newFix)
+
+	output.Success("Fix version incremented to %s", newVersion)
+
+	// Log to file for audit trail
+	logMessage := fmt.Sprintf("Fix version incremented from %s to %s", currentVersion, newVersion)
+	err = m.writeVersionLog(logMessage)
+	if err != nil {
+		output.Warning("Failed to log version increment: %v", err)
+	}
+
 	return nil
 }
 
@@ -2743,7 +3162,8 @@ OPTIONS:
   -m, --minor           Increment minor version (resets fix to 0)
   -b, --bump            Increment fix version
   -t, --tag             Show version tag (e.g., "v1.2.3")
-  -r, --reset           Reset version to 0.0.0 (use with caution)
+  --set                 Set version interactively (opens form)
+  --reset               Reset version to 0.0.0 (requires confirmation)
   -h, --help            Show this help
 
 EXAMPLES:
@@ -2751,8 +3171,11 @@ EXAMPLES:
   git @ version -M                 # Increment major: 1.2.3 → 2.0.0
   git @ version -m                 # Increment minor: 1.2.3 → 1.3.0
   git @ version -b                 # Increment fix: 1.2.3 → 1.2.4
+  git @ version -Mmb               # Combined: major, minor, fix: 1.2.3 → 2.1.1
+  git @ version -m -b              # Multiple flags: minor, fix: 1.2.3 → 1.3.1
   git @ version -t                 # Show version tag (e.g., "v1.2.3")
-  git @ version -r                 # Reset to 0.0.0
+  git @ version --set              # Set version interactively
+  git @ version --reset            # Reset to 0.0.0 (with confirmation)
 
 STORAGE:
   Major version: git config at.major
@@ -2765,7 +3188,7 @@ SEMANTIC VERSIONING:
   FIX: Bug fixes, backward compatible
 
 SECURITY:
-  All version operations are logged for audit purposes.
+  All version operations are logged to .git/gitat-logs/version-changes.log for audit purposes.
 `)
 	return nil
 }
@@ -2985,16 +3408,53 @@ func (m *Manager) WIP(args []string) error {
 		return m.showWIP()
 	}
 
-	if len(args) == 1 {
-		switch args[0] {
-		case "-h", "--help", "help", "h":
+	if len(args) >= 1 {
+		// Handle help first
+		if args[0] == "-h" || args[0] == "--help" || args[0] == "help" || args[0] == "h" {
 			return m.showWIPUsage()
-		case "-s", "--set", "s", "set", ".":
-			return m.setWIP()
-		case "-c", "--checkout", "c", "checkout":
-			return m.checkoutWIP()
-		case "-r", "--restore", "r", "restore":
-			return m.restoreWIP()
+		}
+
+		// Parse flags for combined operations
+		var operations []string
+
+		// Parse all arguments
+		for _, arg := range args {
+			// Handle combined flags like -sc
+			if strings.HasPrefix(arg, "-") && len(arg) > 1 {
+				// Parse each character in the flag
+				for i := 1; i < len(arg); i++ {
+					switch arg[i] {
+					case 's':
+						operations = append(operations, "set")
+					case 'c':
+						operations = append(operations, "checkout")
+					case 'r':
+						operations = append(operations, "restore")
+					}
+				}
+			} else {
+				// Handle individual flags
+				switch arg {
+				case "-s", "--set", "s", "set", ".":
+					operations = append(operations, "set")
+				case "-c", "--checkout", "c", "checkout":
+					operations = append(operations, "checkout")
+				case "-r", "--restore", "r", "restore":
+					operations = append(operations, "restore")
+				}
+			}
+		}
+
+		// Execute operations (only the first one, as these are mutually exclusive)
+		if len(operations) > 0 {
+			switch operations[0] {
+			case "set":
+				return m.setWIP()
+			case "checkout":
+				return m.checkoutWIP()
+			case "restore":
+				return m.restoreWIP()
+			}
 		}
 	}
 
@@ -3067,6 +3527,7 @@ EXAMPLES:
   git @ wip -s                 # Set current branch as WIP
   git @ wip -c                 # Checkout WIP branch
   git @ wip -r                 # Restore WIP to working branch
+  git @ wip -sc                # Combined flags (first operation takes precedence)
 
 WORKFLOW:
   Use WIP to quickly switch between different features you're working on.

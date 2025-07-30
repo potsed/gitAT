@@ -19,14 +19,14 @@ GitAT provides a `git-@` executable that:
 - Is a bash script that handles command routing
 - Sources individual command scripts from `git_at_cmds/`
 - Provides comprehensive help and error handling
-- Integrates with the Go binary for TUI functionality
+- Provides comprehensive help and error handling
 
 ## Installation
 
 The installation process copies the necessary files to `/usr/local/bin/`:
 
 ```bash
-# Install the Go binary (for TUI functionality)
+# Install the Go binary
 sudo cp gitat /usr/local/bin/
 
 # Install the Git extension
@@ -54,7 +54,7 @@ git @ work feature add-authentication
 # Save changes
 git @ save "Add user authentication"
 
-# Launch TUI
+# Show repository info
 git @ info
 ```
 
