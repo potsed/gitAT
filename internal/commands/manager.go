@@ -34,6 +34,7 @@ type Manager struct {
 	init     *handlers.InitHandler
 	security *handlers.SecurityHandler
 	goCmd    *handlers.GoHandler
+	tag      *handlers.TagHandler
 }
 
 // NewManager creates a new commands manager
@@ -64,6 +65,7 @@ func NewManager(cfg *config.Config) *Manager {
 		init:     handlers.NewInitHandler(cfg, gitRepo),
 		security: handlers.NewSecurityHandler(cfg, gitRepo),
 		goCmd:    handlers.NewGoHandler(cfg, gitRepo),
+		tag:      handlers.NewTagHandler(cfg, gitRepo),
 	}
 }
 
@@ -112,6 +114,8 @@ func (m *Manager) Execute(command string, args []string) error {
 		return m.security.Execute(args)
 	case "_go":
 		return m.goCmd.Execute(args)
+	case "tag":
+		return m.tag.Execute(args)
 	// Utility commands
 	case "changes":
 		return m.utility.ExecuteChanges(args)

@@ -30,6 +30,21 @@ func NewVersionHandler(cfg *config.Config, gitRepo *git.Repository) *VersionHand
 // Execute handles the version command
 func (v *VersionHandler) Execute(args []string) error {
 	if len(args) == 0 {
+		// Check if version is configured
+		if !v.hasVersionConfig() {
+			output.Title("📦 GitAT Version")
+			output.Warning("No version configured for this repository")
+			output.Info("")
+			output.Info("To set an initial version, use:")
+			output.Code("git @ version --set")
+			output.Info("")
+			output.Info("Or use quick increment commands:")
+			output.Code("git @ version --major    # Set to 1.0.0")
+			output.Code("git @ version --minor    # Set to 0.1.0")
+			output.Code("git @ version --fix      # Set to 0.0.1")
+			return nil
+		}
+
 		// Show current version
 		version, err := v.getVersion()
 		if err != nil {
@@ -64,6 +79,10 @@ func (v *VersionHandler) Execute(args []string) error {
 
 		// Handle tag and reset (these are single operations)
 		if args[0] == "-t" || args[0] == "--tag" {
+			if !v.hasVersionConfig() {
+				output.Warning("No version configured. Use 'git @ version --set' to set an initial version")
+				return fmt.Errorf("no version configured")
+			}
 			version, err := v.getVersion()
 			if err != nil {
 				return fmt.Errorf("failed to get version: %w", err)
@@ -171,21 +190,30 @@ func (v *VersionHandler) Execute(args []string) error {
 // getVersion gets the current version
 func (v *VersionHandler) getVersion() (string, error) {
 	major, err := v.git.GetConfig("at.major")
-	if err != nil {
-		return "", fmt.Errorf("failed to get major version: %w", err)
+	if err != nil || major == "" {
+		major = "0"
 	}
 
 	minor, err := v.git.GetConfig("at.minor")
-	if err != nil {
-		return "", fmt.Errorf("failed to get minor version: %w", err)
+	if err != nil || minor == "" {
+		minor = "0"
 	}
 
 	fix, err := v.git.GetConfig("at.fix")
-	if err != nil {
-		return "", fmt.Errorf("failed to get fix version: %w", err)
+	if err != nil || fix == "" {
+		fix = "0"
 	}
 
 	return fmt.Sprintf("%s.%s.%s", major, minor, fix), nil
+}
+
+// hasVersionConfig checks if any version configuration exists
+func (v *VersionHandler) hasVersionConfig() bool {
+	major, _ := v.git.GetConfig("at.major")
+	minor, _ := v.git.GetConfig("at.minor")
+	fix, _ := v.git.GetConfig("at.fix")
+
+	return major != "" || minor != "" || fix != ""
 }
 
 // resetVersion resets the version to 0.0.0
@@ -302,9 +330,9 @@ func (v *VersionHandler) setVersion() error {
 
 // incrementMajor increments the major version
 func (v *VersionHandler) incrementMajor() error {
-	major, err := v.git.GetConfig("at.major")
-	if err != nil {
-		return fmt.Errorf("failed to get major version: %w", err)
+	major, _ := v.git.GetConfig("at.major")
+	if major == "" {
+		major = "0"
 	}
 
 	majorNum, err := strconv.Atoi(major)
@@ -336,9 +364,17 @@ func (v *VersionHandler) incrementMajor() error {
 
 // incrementMinor increments the minor version
 func (v *VersionHandler) incrementMinor() error {
-	minor, err := v.git.GetConfig("at.minor")
-	if err != nil {
-		return fmt.Errorf("failed to get minor version: %w", err)
+	// Ensure major version exists
+	major, _ := v.git.GetConfig("at.major")
+	if major == "" {
+		if err := v.git.SetConfig("at.major", "0"); err != nil {
+			return fmt.Errorf("failed to set major version: %w", err)
+		}
+	}
+
+	minor, _ := v.git.GetConfig("at.minor")
+	if minor == "" {
+		minor = "0"
 	}
 
 	minorNum, err := strconv.Atoi(minor)
@@ -367,9 +403,24 @@ func (v *VersionHandler) incrementMinor() error {
 
 // incrementFix increments the fix version
 func (v *VersionHandler) incrementFix() error {
-	fix, err := v.git.GetConfig("at.fix")
-	if err != nil {
-		return fmt.Errorf("failed to get fix version: %w", err)
+	// Ensure major and minor versions exist
+	major, _ := v.git.GetConfig("at.major")
+	if major == "" {
+		if err := v.git.SetConfig("at.major", "0"); err != nil {
+			return fmt.Errorf("failed to set major version: %w", err)
+		}
+	}
+
+	minor, _ := v.git.GetConfig("at.minor")
+	if minor == "" {
+		if err := v.git.SetConfig("at.minor", "0"); err != nil {
+			return fmt.Errorf("failed to set minor version: %w", err)
+		}
+	}
+
+	fix, _ := v.git.GetConfig("at.fix")
+	if fix == "" {
+		fix = "0"
 	}
 
 	fixNum, err := strconv.Atoi(fix)
