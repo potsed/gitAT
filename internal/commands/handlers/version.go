@@ -68,7 +68,7 @@ func (v *VersionHandler) Execute(args []string) error {
 			if err != nil {
 				return fmt.Errorf("failed to get version: %w", err)
 			}
-			output.Code("v" + version)
+			output.Code(version)
 			return nil
 		}
 
