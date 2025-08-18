@@ -98,6 +98,25 @@ deps:
 	$(GOMOD) download
 	$(GOMOD) tidy
 
+# Update dependencies for security patches
+.PHONY: security-update
+security-update:
+	@echo "Updating dependencies for security patches..."
+	$(GOCMD) get -u golang.org/x/net
+	$(GOCMD) get -u golang.org/x/sys
+	$(GOCMD) get -u golang.org/x/text
+	$(GOCMD) get -u golang.org/x/term
+	$(GOMOD) tidy
+	@echo "✅ Security dependencies updated"
+
+# Update all dependencies
+.PHONY: update-deps
+update-deps:
+	@echo "Updating all dependencies..."
+	$(GOCMD) get -u ./...
+	$(GOMOD) tidy
+	@echo "✅ All dependencies updated"
+
 # Format code
 .PHONY: fmt
 fmt:
@@ -158,6 +177,8 @@ help:
 	@echo "  test         - Run tests"
 	@echo "  test-coverage- Run tests with coverage report"
 	@echo "  deps         - Install dependencies"
+	@echo "  security-update - Update security-critical dependencies"
+	@echo "  update-deps  - Update all dependencies to latest versions"
 	@echo "  fmt          - Format code"
 	@echo "  lint         - Run linter"
 	@echo "  install      - Install binary and Git extension to /usr/local/bin"
