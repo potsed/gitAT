@@ -62,6 +62,30 @@ GitAT uses Git's built-in extension mechanism, so once installed, `git @` will b
 
 For more details on how the Git extension works, see [docs/GIT_EXTENSION.md](docs/GIT_EXTENSION.md).
 
+## Man Pages
+
+GitAT includes comprehensive man pages for the main command and key subcommands:
+
+- `git-@` - Main command overview
+- `git-@-work` - Work branch creation
+- `git-@-save` - Commit changes
+- `git-@-sprout` - Branch management (renamed from `branch`)
+- `git-@-sweep` - Branch cleanup
+- `git-@-logz` - Commit history (renamed from `logs`)
+- `git-@-shasum` - Branch status information (renamed from `hash`)
+
+To install man pages:
+```bash
+make install-man
+```
+
+To view man pages:
+```bash
+man git-@
+man git-@-work
+# etc.
+```
+
 ## Quick Start
 
 1. **Initialize in a Git repository:**

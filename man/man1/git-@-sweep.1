@@ -1,0 +1,77 @@
+.TH GIT-@-SWEEP 1 "August 2025" "GitAT v1.1.0" "Git Workflow Management Tool"
+.SH NAME
+git-@-sweep \- Clean up local branches (merged + remote-deleted)
+.SH SYNOPSIS
+.B git @ sweep
+[\fIOPTIONS\fR]
+.SH DESCRIPTION
+.PP
+The \fBsweep\fR command cleans up local branches by removing merged branches and branches that have been deleted on the remote. It helps maintain a clean repository by removing obsolete branches.
+.PP
+The command is safe by default, with confirmation prompts for destructive operations and protection for trunk branches.
+.SH OPTIONS
+.TP
+.B --dry-run
+Preview what would be deleted without actually deleting
+.TP
+.B --force
+Force deletion without confirmation prompts
+.TP
+.B --merged
+Only delete branches that have been merged
+.TP
+.B --remote-deleted
+Only delete branches that no longer exist on remote
+.TP
+.B -h, --help
+Show help message
+.SH EXAMPLES
+.PP
+Clean up branches (with confirmation):
+.RS
+.nf
+git @ sweep
+.fi
+.RE
+.PP
+Preview what would be deleted:
+.RS
+.nf
+git @ sweep --dry-run
+.fi
+.RE
+.PP
+Force clean without confirmation:
+.RS
+.nf
+git @ sweep --force
+.fi
+.RE
+.SH SAFETY FEATURES
+.PP
+The sweep command includes several safety features:
+.RS
+.IP \(bu 2
+Protected branches (master, main, develop, trunk) are never deleted
+.IP \(bu 2
+Confirmation prompts for destructive operations
+.IP \(bu 2
+Dry-run mode to preview changes
+.IP \(bu 2
+Validation that branches are actually merged or remote-deleted
+.RE
+.SH WORKFLOW
+.PP
+1. Identifies merged local branches
+.br
+2. Identifies branches deleted on remote
+.br
+3. Excludes protected branches
+.br
+4. Presents list for confirmation (unless --force)
+.br
+5. Deletes confirmed branches
+.SH SEE ALSO
+.PP
+.BR git-@ (1),
+.BR git-@-sprout (1)

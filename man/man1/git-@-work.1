@@ -1,0 +1,101 @@
+.TH GIT-@-WORK 1 "August 2025" "GitAT v1.1.0" "Git Workflow Management Tool"
+.SH NAME
+git-@-work \- Create work branches following Conventional Commits
+.SH SYNOPSIS
+.B git @ work
+[\fIOPTIONS\fR] \fITYPE\fR [\fIDESCRIPTION\fR]
+.br
+.B git @ work
+\fB--name\fR \fIFULL-BRANCH-NAME\fR
+.SH DESCRIPTION
+.PP
+The \fBwork\fR command creates a new work branch for development following Conventional Commits specification. It helps organize your development workflow by creating branches with consistent naming conventions.
+.PP
+When creating hotfix branches, the command automatically switches to the trunk branch first to ensure the hotfix is based on the latest stable code.
+.SH OPTIONS
+.TP
+.B -n, --name
+Specify the full branch name directly
+.TP
+.B -h, --help
+Show help message
+.SH ARGUMENTS
+.TP
+.B TYPE
+The type of work (required unless using --name). Valid types include:
+.RS
+.IP \(bu 2
+\fBfeature\fR - New features
+.IP \(bu 2
+\fBbugfix\fR - Bug fixes
+.IP \(bu 2
+\fBhotfix\fR - Critical bug fixes (creates from trunk)
+.IP \(bu 2
+\fBrelease\fR - Release preparation
+.IP \(bu 2
+\fBchore\fR - Maintenance tasks
+.IP \(bu 2
+\fBdocs\fR - Documentation updates
+.IP \(bu 2
+\fBstyle\fR - Code style changes
+.IP \(bu 2
+\fBrefactor\fR - Code refactoring
+.IP \(bu 2
+\fBperf\fR - Performance improvements
+.IP \(bu 2
+\fBtest\fR - Test additions/changes
+.IP \(bu 2
+\fBci\fR - CI/CD changes
+.IP \(bu 2
+\fBbuild\fR - Build system changes
+.IP \(bu 2
+\fBrevert\fR - Revert commits
+.RE
+.TP
+.B DESCRIPTION
+Description of the work (optional, will prompt if not provided). The description will be formatted into kebab-case for the branch name.
+.SH EXAMPLES
+.PP
+Create a feature branch:
+.RS
+.nf
+git @ work feature add-user-authentication
+.fi
+.RE
+.PP
+Create a bugfix branch with custom name:
+.RS
+.nf
+git @ work --name bugfix/fix-login-validation
+.fi
+.RE
+.PP
+Create a hotfix branch (will prompt for description):
+.RS
+.nf
+git @ work hotfix
+.fi
+.RE
+.SH WORKFLOW
+.PP
+1. Creates a new branch from current branch (or trunk for hotfix)
+.br
+2. Switches to the new branch
+.br
+3. Sets it as the working branch
+.br
+4. Provides next steps for your workflow
+.PP
+If there are uncommitted changes, the command will prompt to save them to WIP before creating the branch.
+.SH SPECIAL CASES
+.TP
+.B Hotfix branches
+Automatically switch to trunk branch first
+.TP
+.B Uncommitted changes
+Will prompt to save to WIP before creating branch
+.SH SEE ALSO
+.PP
+.BR git-@ (1),
+.BR git-@-sprout (1),
+.BR git-@-hotfix (1)

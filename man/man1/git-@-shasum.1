@@ -1,0 +1,60 @@
+.TH GIT-@-SHASUM 1 "August 2025" "GitAT v1.1.0" "Git Workflow Management Tool"
+.SH NAME
+git-@-shasum \- Display detailed branch status and commit relationships
+.SH SYNOPSIS
+.B git @ shasum
+[\fIOPTIONS\fR]
+.SH DESCRIPTION
+.PP
+The \fBshasum\fR command provides detailed information about the current branch's commit hash, its relationship to the trunk branch, and recent commit history.
+.PP
+The command was renamed from the original \fBhash\fR command to avoid conflicts with standard Git commands.
+.SH OPTIONS
+.TP
+.B -h, --help
+Show help message
+.SH INFORMATION DISPLAYED
+.TP
+.B Current branch name
+Name of the currently checked out branch
+.TP
+.B Current commit hash (SHA)
+Full SHA of the current commit
+.TP
+.B Merge base with trunk branch
+Common ancestor commit between current branch and trunk
+.TP
+.B Number of commits ahead/behind trunk
+How many commits the current branch is ahead or behind trunk
+.TP
+.B Recent commit history
+Last 5 commits in the current branch
+.SH EXAMPLES
+.PP
+Show hash information for current branch:
+.RS
+.nf
+git @ shasum
+.fi
+.RE
+.SH OUTPUT FORMAT
+.PP
+The command displays information in a formatted table with GitAT styling, making it easy to understand the current branch state.
+.SH TRUNK BRANCH DETECTION
+.PP
+The command attempts to determine the trunk branch in this order:
+.RS
+.IP 1. 3
+Check GitAT configuration (\fBat.trunk\fR)
+.IP 2. 3
+Check if \fBmain\fR branch exists
+.IP 3. 3
+Check if \fBmaster\fR branch exists
+.IP 4. 3
+Fall back to \fBmain\fR as default
+.RE
+.SH SEE ALSO
+.PP
+.BR git-@ (1),
+.BR git-@-logz (1),
+.BR git (1)
