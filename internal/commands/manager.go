@@ -11,28 +11,30 @@ type Manager struct {
 	config *config.Config
 	git    *git.Repository
 	// Command handlers
-	work        *handlers.WorkHandler
-	version     *handlers.VersionHandler
-	save        *handlers.SaveHandler
-	squash      *handlers.SquashHandler
-	pr          *handlers.PullRequestHandler
-	branch      *handlers.BranchHandler
-	sweep       *handlers.SweepHandler
-	wip         *handlers.WIPHandler
-	hotfix      *handlers.HotfixHandler
-	utility     *handlers.UtilityHandler
-	info        *handlers.InfoHandler
-	release     *handlers.ReleaseHandler
-	feature     *handlers.FeatureHandler
-	product     *handlers.ProductHandler
-	issue       *handlers.IssueHandler
-	label       *handlers.LabelHandler
-	trunk       *handlers.TrunkHandler
-	ignore      *handlers.IgnoreHandler
-	init        *handlers.InitHandler
-	security    *handlers.SecurityHandler
-	goCmd       *handlers.GoHandler
-	tag         *handlers.TagHandler
+	work               *handlers.WorkHandler
+	version            *handlers.VersionHandler
+	save               *handlers.SaveHandler
+	squash             *handlers.SquashHandler
+	pr                 *handlers.PullRequestHandler
+	branch             *handlers.BranchHandler
+	sweep              *handlers.SweepHandler
+	wip                *handlers.WIPHandler
+	hotfix             *handlers.HotfixHandler
+	utility            *handlers.UtilityHandler
+	info               *handlers.InfoHandler
+	release            *handlers.ReleaseHandler
+	feature            *handlers.FeatureHandler
+	product            *handlers.ProductHandler
+	issue              *handlers.IssueHandler
+	label              *handlers.LabelHandler
+	trunk              *handlers.TrunkHandler
+	ignore             *handlers.IgnoreHandler
+	init               *handlers.InitHandler
+	security           *handlers.SecurityHandler
+	goCmd              *handlers.GoHandler
+	tag                *handlers.TagHandler
+	logz               *handlers.LogzHandler
+	shasum             *handlers.ShasumHandler
 	fallthroughHandler *handlers.FallthroughHandler
 }
 
@@ -41,30 +43,32 @@ func NewManager(cfg *config.Config) *Manager {
 	gitRepo := git.NewRepository(cfg.RepoPath)
 
 	return &Manager{
-		config:      cfg,
-		git:         gitRepo,
-		work:        handlers.NewWorkHandler(cfg, gitRepo),
-		version:     handlers.NewVersionHandler(cfg, gitRepo),
-		save:        handlers.NewSaveHandler(cfg, gitRepo),
-		squash:      handlers.NewSquashHandler(cfg, gitRepo),
-		pr:          handlers.NewPullRequestHandler(cfg, gitRepo),
-		branch:      handlers.NewBranchHandler(cfg, gitRepo),
-		sweep:       handlers.NewSweepHandler(cfg, gitRepo),
-		wip:         handlers.NewWIPHandler(cfg, gitRepo),
-		hotfix:      handlers.NewHotfixHandler(cfg, gitRepo),
-		utility:     handlers.NewUtilityHandler(cfg, gitRepo),
-		info:        handlers.NewInfoHandler(cfg, gitRepo),
-		release:     handlers.NewReleaseHandler(cfg, gitRepo),
-		feature:     handlers.NewFeatureHandler(cfg, gitRepo),
-		product:     handlers.NewProductHandler(cfg, gitRepo),
-		issue:       handlers.NewIssueHandler(cfg, gitRepo),
-		label:       handlers.NewLabelHandler(cfg, gitRepo),
-		trunk:       handlers.NewTrunkHandler(cfg, gitRepo),
-		ignore:      handlers.NewIgnoreHandler(cfg, gitRepo),
-		init:        handlers.NewInitHandler(cfg, gitRepo),
-		security:    handlers.NewSecurityHandler(cfg, gitRepo),
-		goCmd:       handlers.NewGoHandler(cfg, gitRepo),
-		tag:         handlers.NewTagHandler(cfg, gitRepo),
+		config:             cfg,
+		git:                gitRepo,
+		work:               handlers.NewWorkHandler(cfg, gitRepo),
+		version:            handlers.NewVersionHandler(cfg, gitRepo),
+		save:               handlers.NewSaveHandler(cfg, gitRepo),
+		squash:             handlers.NewSquashHandler(cfg, gitRepo),
+		pr:                 handlers.NewPullRequestHandler(cfg, gitRepo),
+		branch:             handlers.NewBranchHandler(cfg, gitRepo),
+		sweep:              handlers.NewSweepHandler(cfg, gitRepo),
+		wip:                handlers.NewWIPHandler(cfg, gitRepo),
+		hotfix:             handlers.NewHotfixHandler(cfg, gitRepo),
+		utility:            handlers.NewUtilityHandler(cfg, gitRepo),
+		info:               handlers.NewInfoHandler(cfg, gitRepo),
+		release:            handlers.NewReleaseHandler(cfg, gitRepo),
+		feature:            handlers.NewFeatureHandler(cfg, gitRepo),
+		product:            handlers.NewProductHandler(cfg, gitRepo),
+		issue:              handlers.NewIssueHandler(cfg, gitRepo),
+		label:              handlers.NewLabelHandler(cfg, gitRepo),
+		trunk:              handlers.NewTrunkHandler(cfg, gitRepo),
+		ignore:             handlers.NewIgnoreHandler(cfg, gitRepo),
+		init:               handlers.NewInitHandler(cfg, gitRepo),
+		security:           handlers.NewSecurityHandler(cfg, gitRepo),
+		goCmd:              handlers.NewGoHandler(cfg, gitRepo),
+		tag:                handlers.NewTagHandler(cfg, gitRepo),
+		logz:               handlers.NewLogzHandler(cfg, gitRepo),
+		shasum:             handlers.NewShasumHandler(cfg, gitRepo),
 		fallthroughHandler: handlers.NewFallthroughHandler(cfg, gitRepo),
 	}
 }
@@ -74,7 +78,7 @@ func (m *Manager) Execute(command string, args []string) error {
 	switch command {
 	case "work":
 		return m.work.Execute(args)
-	case "version":
+	case "semver":
 		return m.version.Execute(args)
 	case "save":
 		return m.save.Execute(args)
@@ -82,7 +86,7 @@ func (m *Manager) Execute(command string, args []string) error {
 		return m.squash.Execute(args)
 	case "pr":
 		return m.pr.Execute(args)
-	case "branch":
+	case "sprout":
 		return m.branch.Execute(args)
 	case "sweep":
 		return m.sweep.Execute(args)
@@ -106,23 +110,23 @@ func (m *Manager) Execute(command string, args []string) error {
 		return m.trunk.Execute(args)
 	case "ignore":
 		return m.ignore.Execute(args)
-	case "initlocal":
+	case "setup-local":
 		return m.init.ExecuteLocal(args)
-	case "initremote":
+	case "setup-remote":
 		return m.init.ExecuteRemote(args)
 	case "security":
 		return m.security.Execute(args)
 	case "_go":
 		return m.goCmd.Execute(args)
-	case "tag":
+	case "dub":
 		return m.tag.Execute(args)
 	// Utility commands
 	case "changes":
 		return m.utility.ExecuteChanges(args)
-	case "logs":
-		return m.utility.ExecuteLogs(args)
-	case "hash":
-		return m.utility.ExecuteHash(args)
+	case "logz":
+		return m.logz.Execute(args)
+	case "shasum":
+		return m.shasum.Execute(args)
 	case "id":
 		return m.utility.ExecuteID(args)
 	case "path":

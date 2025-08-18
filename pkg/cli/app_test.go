@@ -96,7 +96,7 @@ func TestRunWithValidCommands(t *testing.T) {
 	app := createTestApp(t)
 
 	validCommands := []string{
-		"path", "changes", "logs", "product", "feature", "issue",
+		"path", "changes", "logz", "product", "feature", "issue",
 		"version", "trunk", "label", "id", "wip", "master", "root",
 	}
 
@@ -122,7 +122,7 @@ func TestCommandRouting(t *testing.T) {
 	commands := map[string]bool{
 		"path":    true,
 		"changes": true,
-		"logs":    true,
+		"logz":    true,
 		"product": true,
 		"feature": true,
 		"issue":   true,

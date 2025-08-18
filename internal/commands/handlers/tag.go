@@ -292,18 +292,18 @@ func (t *TagHandler) pushAllTags() error {
 
 // showUsage displays the usage information
 func (t *TagHandler) showUsage() error {
-	usage := `# Tag Command
+	usage := `# Dub Command (Enhanced Tagging)
 
 Manages Git tags with version integration and interactive forms.
 
 ## Usage
 
-  git @ tag
-  git @ tag create
-  git @ tag list
-  git @ tag delete <name>
-  git @ tag push [<name>]
-  git @ tag <name> <message>
+  git @ dub
+  git @ dub create
+  git @ dub list
+  git @ dub delete <name>
+  git @ dub push [<name>]
+  git @ dub <name> <message>
 
 ## Commands
 
@@ -320,26 +320,26 @@ Manages Git tags with version integration and interactive forms.
 ## Examples
 
   # Create tag interactively (shows current version)
-  git @ tag
-  git @ tag create
+  git @ dub
+  git @ dub create
 
   # Create tag from current version with custom message
-  git @ tag "Release v2.0.5 with new features"
+  git @ dub "Release v2.0.5 with new features"
 
   # Create specific tag with message
-  git @ tag v1.0.0 "Initial release"
+  git @ dub v1.0.0 "Initial release"
 
   # List all tags
-  git @ tag list
+  git @ dub list
 
   # Delete a tag
-  git @ tag delete v1.0.0
+  git @ dub delete v1.0.0
 
   # Push specific tag
-  git @ tag push v1.0.0
+  git @ dub push v1.0.0
 
   # Push all tags
-  git @ tag push
+  git @ dub push
 
 ## Features
 
@@ -352,7 +352,7 @@ Manages Git tags with version integration and interactive forms.
 
 ## Integration
 
-• Works with **git @ version** command
+• Works with **git @ semver** command
 • Uses current version as default tag name
 • Supports conventional version tagging
 • Integrates with GitAT workflow

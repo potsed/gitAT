@@ -26,9 +26,9 @@ GitAT (`git @`) is a powerful command-line tool that extends Git with workflow m
 ### 📊 **Information & Status**
 
 - `git @ info` - Comprehensive status report from all commands
-- `git @ hash` - Detailed branch status and commit relationships
+- `git @ shasum` - Detailed branch status and commit relationships
 - `git @ changes` - View uncommitted changes
-- `git @ logs` - View commit history
+- `git @ logz` - View commit history
 
 ### 🏷️ **Version Management**
 
