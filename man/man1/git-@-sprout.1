@@ -1,0 +1,82 @@
+.TH GIT-@-SPROUT 1 "August 2025" "GitAT v1.1.0" "Git Workflow Management Tool"
+.SH NAME
+git-@-sprout \- Manage working branch configuration
+.SH SYNOPSIS
+.B git @ sprout
+[\fIACTION\fR] [\fIBRANCH-NAME\fR] [\fIOPTIONS\fR]
+.SH DESCRIPTION
+.PP
+The \fBsprout\fR command manages Git branches with interactive creation, deletion, and switching. It was renamed from the original \fBbranch\fR command to avoid conflicts with standard Git commands.
+.PP
+The command provides a comprehensive interface for branch management with interactive prompts and validation.
+.SH ACTIONS
+.TP
+.B list
+List all branches (default action)
+.TP
+.B create
+Create a new branch
+.TP
+.B delete
+Delete a branch
+.TP
+.B switch
+Switch to a different branch
+.SH OPTIONS
+.TP
+.B -h, --help
+Show help message
+.SH ARGUMENTS
+.TP
+.B BRANCH-NAME
+Name of the branch to operate on (required for create, delete, and switch actions)
+.SH EXAMPLES
+.PP
+List all branches:
+.RS
+.nf
+git @ sprout
+.fi
+.RE
+.PP
+Create a new branch:
+.RS
+.nf
+git @ sprout create new-feature
+.fi
+.RE
+.PP
+Delete a branch:
+.RS
+.nf
+git @ sprout delete old-feature
+.fi
+.RE
+.PP
+Switch to a branch:
+.RS
+.nf
+git @ sprout switch develop
+.fi
+.RE
+.SH INTERACTIVE MODE
+.PP
+If no arguments are provided, the command will show an interactive form to select the action and branch.
+.SH VALIDATION
+.PP
+The command performs several validation checks:
+.RS
+.IP \(bu 2
+Ensures we're in a Git repository
+.IP \(bu 2
+Validates branch names
+.IP \(bu 2
+Prevents deletion of protected branches (master, main, develop, trunk)
+.IP \(bu 2
+Confirms destructive operations
+.RE
+.SH SEE ALSO
+.PP
+.BR git-@ (1),
+.BR git-@-work (1),
+.BR git-@-sweep (1)

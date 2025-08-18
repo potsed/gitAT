@@ -1,0 +1,74 @@
+.TH GIT-@-SAVE 1 "August 2025" "GitAT v1.1.0" "Git Workflow Management Tool"
+.SH NAME
+git-@-save \- Securely save changes with validation
+.SH SYNOPSIS
+.B git @ save
+[\fIOPTIONS\fR] [\fIMESSAGE\fR]
+.br
+.B git @ save
+\fB-m\fR \fIMESSAGE\fR
+.SH DESCRIPTION
+.PP
+The \fBsave\fR command securely saves current work with a commit message. It provides validation and follows best practices for committing changes.
+.PP
+If no commit message is provided, the command will prompt for one with an interactive form. The command automatically stages all changes before committing.
+.SH OPTIONS
+.TP
+.B -m, --message
+Specify commit message directly
+.TP
+.B -h, --help
+Show help message
+.SH ARGUMENTS
+.TP
+.B MESSAGE
+Commit message (optional, will prompt if not provided). If provided, it should follow Conventional Commits specification.
+.SH EXAMPLES
+.PP
+Save changes with a message:
+.RS
+.nf
+git @ save "Add user authentication system"
+.fi
+.RE
+.PP
+Save changes with the -m flag:
+.RS
+.nf
+git @ save -m "Fix login validation error"
+.fi
+.RE
+.PP
+Save changes interactively (will prompt for message):
+.RS
+.nf
+git @ save
+.fi
+.RE
+.SH WORKFLOW
+.PP
+1. Validates that we're in a Git repository
+.br
+2. Checks for uncommitted changes
+.br
+3. Stages all changes (git add -A)
+.br
+4. Creates a commit with the provided or entered message
+.br
+5. Shows success message with branch information
+.SH VALIDATION
+.PP
+The command performs several validation checks:
+.RS
+.IP \(bu 2
+Ensures we're in a Git repository
+.IP \(bu 2
+Verifies there are changes to commit
+.IP \(bu 2
+Validates commit message format (when provided)
+.RE
+.SH SEE ALSO
+.PP
+.BR git-@ (1),
+.BR git-@-work (1),
+.BR git-@-squash (1)

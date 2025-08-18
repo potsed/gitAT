@@ -92,6 +92,17 @@ Examples:
   git @ sweep
 
 For more information, visit: https://github.com/potsed/gitAT
+
+## Man Pages
+
+GitAT includes comprehensive man pages:
+  man git-@        # Main command
+  man git-@-work   # Work branch creation
+  man git-@-save   # Commit changes
+  man git-@-sprout # Branch management
+  man git-@-sweep  # Branch cleanup
+  man git-@-logz   # Commit history
+  man git-@-shasum # Branch status
 `)
 	return nil
 }

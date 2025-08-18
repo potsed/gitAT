@@ -1,0 +1,72 @@
+.TH GIT-@-LOGZ 1 "August 2025" "GitAT v1.1.0" "Git Workflow Management Tool"
+.SH NAME
+git-@-logz \- View commit history with enhanced formatting
+.SH SYNOPSIS
+.B git @ logz
+[\fIOPTIONS\fR]
+.SH DESCRIPTION
+.PP
+The \fBlogz\fR command provides a nicely formatted view of the commit history. It's a GitAT-enhanced version of 'git log' with better output formatting that follows the GitAT styling conventions.
+.PP
+The command was renamed from the original \fBlogs\fR command to avoid conflicts with standard Git commands.
+.SH OPTIONS
+.PP
+All standard 'git log' options are supported. Some common ones:
+.TP
+.B -n, --max-count=<number>
+Limit the number of commits to output
+.TP
+.B --oneline
+Show each commit as a single line
+.TP
+.B --graph
+Draw a text-based graphical representation of the commit history
+.TP
+.B --all
+Show all branches
+.TP
+.B --author=<pattern>
+Show only commits by authors matching the pattern
+.TP
+.B -h, --help
+Show help message
+.SH EXAMPLES
+.PP
+Show last 10 commits (default):
+.RS
+.nf
+git @ logz
+.fi
+.RE
+.PP
+Show last 5 commits:
+.RS
+.nf
+git @ logz -5
+.fi
+.RE
+.PP
+Show commits with graph:
+.RS
+.nf
+git @ logz --graph --oneline
+.fi
+.RE
+.PP
+Show all commits by a specific author:
+.RS
+.nf
+git @ logz --author="John Doe"
+.fi
+.RE
+.SH DEFAULT BEHAVIOR
+.PP
+By default, the command shows the last 10 commits with oneline formatting and GitAT styling.
+.SH OUTPUT FORMAT
+.PP
+The command formats output with GitAT's colorful logging system, making it easier to read than standard git log output.
+.SH SEE ALSO
+.PP
+.BR git-@ (1),
+.BR git-@-shasum (1),
+.BR git (1)

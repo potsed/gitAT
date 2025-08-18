@@ -139,8 +139,13 @@ install: build-local
 	@echo "Installing GitAT..."
 	@sudo cp $(BINARY_NAME) /usr/local/bin/
 	@sudo chmod +x /usr/local/bin/$(BINARY_NAME)
+	@echo "Installing man pages..."
+	@sudo mkdir -p /usr/local/share/man/man1
+	@sudo cp -r man/man1/* /usr/local/share/man/man1/
+	@sudo mandb 2>/dev/null || echo "Run 'mandb' to update man page database"
 	@echo "GitAT installed to /usr/local/bin/$(BINARY_NAME)"
 	@echo "Git extension 'git @' is now available"
+	@echo "Man pages installed"
 
 # Uninstall the binary and Git extension
 .PHONY: uninstall
@@ -148,6 +153,28 @@ uninstall:
 	@echo "Uninstalling GitAT..."
 	@sudo rm -f /usr/local/bin/$(BINARY_NAME)
 	@echo "GitAT uninstalled"
+
+# Install man pages
+.PHONY: install-man
+install-man:
+	@echo "Installing man pages..."
+	@sudo mkdir -p /usr/local/share/man/man1
+	@sudo cp -r man/man1/* /usr/local/share/man/man1/
+	@sudo mandb 2>/dev/null || echo "Run 'mandb' to update man page database"
+	@echo "Man pages installed"
+
+# Uninstall man pages
+.PHONY: uninstall-man
+uninstall-man:
+	@echo "Removing man pages..."
+	@sudo rm -f /usr/local/share/man/man1/git-@*
+	@sudo mandb 2>/dev/null || echo "Run 'mandb' to update man page database"
+	@echo "Man pages removed"
+
+# View main man page
+.PHONY: man
+man:
+	@man git-@
 
 # Run the application
 .PHONY: run
@@ -183,6 +210,9 @@ help:
 	@echo "  lint         - Run linter"
 	@echo "  install      - Install binary and Git extension to /usr/local/bin"
 	@echo "  uninstall    - Remove binary and Git extension from /usr/local/bin"
+	@echo "  install-man  - Install man pages"
+	@echo "  uninstall-man- Remove man pages"
+	@echo "  man          - View main man page"
 	@echo "  run          - Build and run the application"
 	@echo "  validate     - Validate binary name and clean deprecated binaries"
 	@echo "  help         - Show this help message"

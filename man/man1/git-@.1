@@ -1,0 +1,184 @@
+.TH GIT-@ 1 "August 2025" "GitAT v1.1.0" "Git Workflow Management Tool"
+.SH NAME
+git-@ \- Git Workflow Management Tool
+.SH SYNOPSIS
+.B git @
+[\fICOMMAND\fR] [\fIOPTIONS\fR]
+.SH DESCRIPTION
+.PP
+GitAT (Git @) is a comprehensive Git workflow management tool that extends Git with workflow management capabilities. It provides commands for branch management, commit organization, pull request creation, and more, all following best practices and conventions.
+.PP
+GitAT uses Git's built-in extension mechanism, so once installed, \fBgit @\fR will be available as a native Git command.
+.SH COMMANDS
+.TP
+.B work <type> <description>
+Create work branches following Conventional Commits
+.TP
+.B hotfix <description>
+Create hotfix branches for urgent fixes
+.TP
+.B save "message"
+Securely save changes with validation
+.TP
+.B squash [branch]
+Squash commits with auto-detection of parent branch
+.TP
+.B pr [options]
+Create Pull Requests with auto-description generation
+.TP
+.B sprout
+Manage working branch configuration
+.TP
+.B sweep
+Clean up local branches (merged + remote-deleted)
+.TP
+.B info
+Comprehensive status report from all commands
+.TP
+.B shasum
+Detailed branch status and commit relationships
+.TP
+.B logz
+View commit history
+.TP
+.B product [<name>]
+Product name configuration
+.TP
+.B feature [<name>]
+Feature name configuration
+.TP
+.B issue [<id>]
+Issue/task identifier configuration
+.TP
+.B semver
+Semantic versioning management
+.TP
+.B dub
+Enhanced tag creation with version integration
+.TP
+.B release
+Create releases with proper tagging
+.TP
+.B master, root
+Switch to trunk branches
+.TP
+.B wip
+Work in progress management
+.TP
+.B changes
+View uncommitted changes
+.TP
+.B _label
+Generate commit labels
+.TP
+.B _id
+Generate unique project identifiers
+.TP
+.B _path
+Get repository path
+.TP
+.B _trunk
+Manage trunk branch configuration
+.TP
+.B ignore
+Add patterns to .gitignore
+.TP
+.B setup-local
+Initialize local repository with branch structure
+.TP
+.B setup-remote
+Initialize remote repository with basic structure
+.TP
+.B _security
+Security utilities and status
+.TP
+.B _go
+Initialize GitAT for current repository
+.SH OPTIONS
+.TP
+.B -h, --help
+Show help message
+.TP
+.B -v, --version
+Show version information
+.SH EXAMPLES
+.PP
+Create a feature branch:
+.RS
+.nf
+git @ work feature add-user-authentication
+.fi
+.RE
+.PP
+Save changes:
+.RS
+.nf
+git @ save "Add user authentication system"
+.fi
+.RE
+.PP
+Create a pull request:
+.RS
+.nf
+git @ pr
+.fi
+.RE
+.PP
+Clean up merged branches:
+.RS
+.nf
+git @ sweep
+.fi
+.RE
+.SH CONVENTIONAL COMMITS
+.PP
+GitAT follows the Conventional Commits specification:
+.RS
+.IP \(bu 2
+\fBfeat:\fR New features (MINOR version)
+.IP \(bu 2
+\fBfix:\fR Bug fixes (PATCH version)
+.IP \(bu 2
+\fBdocs:\fR Documentation changes
+.IP \(bu 2
+\fBstyle:\fR Code style changes
+.IP \(bu 2
+\fBrefactor:\fR Code refactoring
+.IP \(bu 2
+\fBtest:\fR Adding tests
+.IP \(bu 2
+\fBchore:\fR Maintenance tasks
+.IP \(bu 2
+\fBhotfix:\fR Urgent fixes
+.RE
+.SH FILES
+.PP
+GitAT uses Git configuration to store project settings:
+.RS
+.IP \(bu 2
+\fBat.product\fR - Product name
+.IP \(bu 2
+\fBat.feature\fR - Current feature name
+.IP \(bu 2
+\fBat.task\fR - Current task/issue ID
+.IP \(bu 2
+\fBat.branch\fR - Working branch
+.IP \(bu 2
+\fBat.trunk\fR - Trunk branch (master/main)
+.IP \(bu 2
+\fBat.version\fR - Current version
+.IP \(bu 2
+\fBat.wip\fR - Work in progress branch
+.RE
+.SH SEE ALSO
+.PP
+.BR git (1)
+.SH AUTHOR
+.PP
+GitAT was created by potsed and contributors.
+.SH REPORTING BUGS
+.PP
+Report bugs to: https://github.com/potsed/gitAT/issues
+.SH COPYRIGHT
+.PP
+This is free software; see the source for copying conditions. There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
