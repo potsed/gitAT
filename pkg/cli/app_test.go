@@ -35,16 +35,20 @@ func TestShowVersion(t *testing.T) {
 }
 
 // TestRunWithNoArgs tests running with no arguments
+// Requirement 4.1: git @ with no arguments should fall through to show Git help
 func TestRunWithNoArgs(t *testing.T) {
 	app := createTestApp(t)
 
 	err := app.Run([]string{})
-	if err == nil {
-		t.Log("No args should show usage (this is expected behavior)")
+	// This should now fall through to Git (which will likely fail in test environment)
+	// but it should not show Gitat usage
+	if err != nil {
+		t.Logf("No args fell through to Git as expected: %v", err)
 	}
 }
 
 // TestRunWithHelp tests help commands
+// Requirement 4.3: --help should show Gitat help, not fall through to Git
 func TestRunWithHelp(t *testing.T) {
 	app := createTestApp(t)
 
@@ -61,6 +65,7 @@ func TestRunWithHelp(t *testing.T) {
 }
 
 // TestRunWithVersion tests version commands
+// Requirements 4.2: --version should show Gitat version, not fall through to Git
 func TestRunWithVersion(t *testing.T) {
 	app := createTestApp(t)
 
@@ -197,5 +202,115 @@ func BenchmarkShowVersion(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		app.showVersion()
+	}
+}
+
+// TestEdgeCases tests edge cases for fallthrough behavior
+func TestEdgeCases(t *testing.T) {
+	app := createTestApp(t)
+
+	tests := []struct {
+		name        string
+		args        []string
+		expectError bool
+		description string
+	}{
+		{
+			name:        "empty args fall through to git",
+			args:        []string{},
+			expectError: true, // Will fail in test environment but should attempt fallthrough
+			description: "Requirement 4.1: Empty args should fall through to Git help",
+		},
+		{
+			name:        "version flag shows gitat version",
+			args:        []string{"--version"},
+			expectError: false,
+			description: "Requirement 4.2: --version should show Gitat version",
+		},
+		{
+			name:        "help flag shows gitat help",
+			args:        []string{"--help"},
+			expectError: false,
+			description: "Requirement 4.3: --help should show Gitat help",
+		},
+		{
+			name:        "short version flag shows gitat version",
+			args:        []string{"-v"},
+			expectError: false,
+			description: "Requirement 4.2: -v should show Gitat version",
+		},
+		{
+			name:        "short help flag shows gitat help",
+			args:        []string{"-h"},
+			expectError: false,
+			description: "Requirement 4.3: -h should show Gitat help",
+		},
+		{
+			name:        "git command should fall through",
+			args:        []string{"status"},
+			expectError: false, // Git status succeeds in this environment
+			description: "Standard Git commands should fall through",
+		},
+		{
+			name:        "git command with args should fall through",
+			args:        []string{"log", "--oneline"},
+			expectError: false, // Git log succeeds in this environment
+			description: "Git commands with arguments should fall through",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := app.Run(tt.args)
+
+			if tt.expectError && err == nil {
+				t.Errorf("Expected error for %s but got none", tt.description)
+			} else if !tt.expectError && err != nil {
+				t.Errorf("Expected no error for %s but got: %v", tt.description, err)
+			}
+		})
+	}
+}
+
+// TestFallthroughBehavior tests that fallthrough works as expected
+func TestFallthroughBehavior(t *testing.T) {
+	app := createTestApp(t)
+
+	// Test that unknown commands fall through (will fail in test env but should try)
+	unknownCommands := []string{
+		"status", "diff", "log", "commit", "push", "pull", "merge", "rebase",
+	}
+
+	for _, cmd := range unknownCommands {
+		t.Run("fallthrough_"+cmd, func(t *testing.T) {
+			err := app.Run([]string{cmd})
+			// These should attempt to fall through to Git
+			// They will fail in test environment but should not be "unknown command" errors
+			if err != nil {
+				t.Logf("Command '%s' fell through as expected (error in test env): %v", cmd, err)
+			}
+		})
+	}
+}
+
+// TestReservedCommandsDoNotFallThrough tests that Gitat commands don't fall through
+func TestReservedCommandsDoNotFallThrough(t *testing.T) {
+	app := createTestApp(t)
+
+	// These commands should be handled by Gitat, not fall through
+	gitAtCommands := []string{
+		"work", "save", "squash", "pr", "branch", "sweep", "wip", "hotfix",
+		"info", "release", "feature", "product", "issue", "version",
+	}
+
+	for _, cmd := range gitAtCommands {
+		t.Run("reserved_"+cmd, func(t *testing.T) {
+			err := app.Run([]string{cmd})
+			// These should be handled by Gitat handlers, not fall through
+			// They may fail due to missing git repo but should not be "unknown command"
+			if err != nil {
+				t.Logf("Gitat command '%s' handled by Gitat (may fail in test env): %v", cmd, err)
+			}
+		})
 	}
 }

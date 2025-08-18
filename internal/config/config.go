@@ -4,7 +4,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
+
+// FallthroughConfig holds configuration for Git fallthrough functionality
+type FallthroughConfig struct {
+	Enabled   bool     `json:"enabled"`
+	Verbose   bool     `json:"verbose"`
+	Blacklist []string `json:"blacklist"`
+}
 
 // Config holds the GitAT configuration
 type Config struct {
@@ -19,8 +27,9 @@ type Config struct {
 	WIP      string
 
 	// Application settings
-	Verbose bool
-	DryRun  bool
+	Verbose     bool
+	DryRun      bool
+	Fallthrough FallthroughConfig `json:"fallthrough"`
 }
 
 // Load loads the GitAT configuration from Git config
@@ -42,6 +51,9 @@ func Load() (*Config, error) {
 	cfg.Branch = getGitConfig("at.branch")
 	cfg.Version = getGitConfig("at.version")
 	cfg.WIP = getGitConfig("at.wip")
+
+	// Load fallthrough configuration with defaults
+	cfg.Fallthrough = loadFallthroughConfig()
 
 	return cfg, nil
 }
@@ -124,4 +136,123 @@ func (c *Config) SetVersion(version string) error {
 func (c *Config) SetWIP(branch string) error {
 	c.WIP = branch
 	return c.Save()
+}
+
+// loadFallthroughConfig loads fallthrough configuration with default values
+func loadFallthroughConfig() FallthroughConfig {
+	cfg := FallthroughConfig{
+		Enabled: true,  // Enable fallthrough by default
+		Verbose: false, // Disable verbose mode by default
+		Blacklist: []string{
+			"--version", // Prevent fallthrough for version command
+			"--help",    // Prevent fallthrough for help command
+		},
+	}
+
+	// Load from Git config if available
+	if enabled := getGitConfig("at.fallthrough.enabled"); enabled != "" {
+		cfg.Enabled = enabled == "true"
+	}
+
+	if verbose := getGitConfig("at.fallthrough.verbose"); verbose != "" {
+		cfg.Verbose = verbose == "true"
+	}
+
+	// TODO: Load blacklist from Git config (comma-separated values)
+	// For now, use defaults
+
+	return cfg
+}
+
+// SetFallthroughEnabled enables or disables fallthrough functionality
+func (c *Config) SetFallthroughEnabled(enabled bool) error {
+	c.Fallthrough.Enabled = enabled
+	return c.Save()
+}
+
+// SetFallthroughVerbose enables or disables verbose mode for fallthrough
+func (c *Config) SetFallthroughVerbose(verbose bool) error {
+	c.Fallthrough.Verbose = verbose
+	return c.Save()
+}
+
+// AddToFallthroughBlacklist adds a command to the fallthrough blacklist
+func (c *Config) AddToFallthroughBlacklist(command string) error {
+	// Check if command is already in blacklist
+	for _, cmd := range c.Fallthrough.Blacklist {
+		if cmd == command {
+			return nil // Already in blacklist
+		}
+	}
+	
+	c.Fallthrough.Blacklist = append(c.Fallthrough.Blacklist, command)
+	return c.Save()
+}
+
+// RemoveFromFallthroughBlacklist removes a command from the fallthrough blacklist
+func (c *Config) RemoveFromFallthroughBlacklist(command string) error {
+	for i, cmd := range c.Fallthrough.Blacklist {
+		if cmd == command {
+			// Remove command from slice
+			c.Fallthrough.Blacklist = append(c.Fallthrough.Blacklist[:i], c.Fallthrough.Blacklist[i+1:]...)
+			return c.Save()
+		}
+	}
+	return nil // Command not found in blacklist
+}
+
+// IsFallthroughBlacklisted checks if a command is blacklisted from fallthrough
+func (c *Config) IsFallthroughBlacklisted(command string) bool {
+	for _, cmd := range c.Fallthrough.Blacklist {
+		if cmd == command {
+			return true
+		}
+	}
+	return false
+}
+
+// GetFallthroughBlacklist returns a copy of the current blacklist
+func (c *Config) GetFallthroughBlacklist() []string {
+	blacklist := make([]string, len(c.Fallthrough.Blacklist))
+	copy(blacklist, c.Fallthrough.Blacklist)
+	return blacklist
+}
+
+// ClearFallthroughBlacklist removes all commands from the blacklist
+func (c *Config) ClearFallthroughBlacklist() error {
+	c.Fallthrough.Blacklist = []string{}
+	return c.Save()
+}
+
+// SetFallthroughBlacklist replaces the entire blacklist with the provided commands
+func (c *Config) SetFallthroughBlacklist(commands []string) error {
+	c.Fallthrough.Blacklist = make([]string, len(commands))
+	copy(c.Fallthrough.Blacklist, commands)
+	return c.Save()
+}
+
+// ValidateFallthroughConfig validates the fallthrough configuration
+func (c *Config) ValidateFallthroughConfig() error {
+	// Check for duplicate entries in blacklist
+	seen := make(map[string]bool)
+	for _, cmd := range c.Fallthrough.Blacklist {
+		if seen[cmd] {
+			return fmt.Errorf("duplicate command in fallthrough blacklist: %s", cmd)
+		}
+		seen[cmd] = true
+	}
+	
+	// Validate that blacklisted commands are reasonable
+	for _, cmd := range c.Fallthrough.Blacklist {
+		if strings.TrimSpace(cmd) == "" {
+			return fmt.Errorf("empty command in fallthrough blacklist")
+		}
+		
+		// Warn about potentially problematic blacklist entries
+		if cmd == "help" || cmd == "--help" {
+			// This is fine, but might be confusing
+		}
+	}
+	
+	return nil
 } 

@@ -45,6 +45,8 @@ GitAT (`git @`) is a powerful command-line tool that extends Git with workflow m
 
 ## Installation
 
+> **Important**: GitAT uses the binary name `git-@` (not `gitat`) to function as a Git extension. See [Binary Naming Guidelines](docs/BINARY_NAMING.md) for details.
+
 ```bash
 # Clone the repository
 git clone https://github.com/potsed/gitAT.git

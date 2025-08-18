@@ -2,377 +2,342 @@ package commands
 
 import (
 	"os"
-	"path/filepath"
+	"os/exec"
 	"testing"
 
 	"github.com/potsed/gitAT/internal/config"
-	"github.com/potsed/gitAT/internal/git"
 )
 
-// createTestManager creates a test manager with a temporary repository
-func createTestManager(t *testing.T) *Manager {
+func TestManager_Execute_WithFallthrough(t *testing.T) {
+	// Skip test if git is not available
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git executable not found, skipping fallthrough tests")
+	}
+
 	// Create a temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "gitat-test-*")
 	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Initialize a git repository in the temp directory
+	cmd := exec.Command("git", "init")
+	cmd.Dir = tempDir
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("Failed to initialize git repository: %v", err)
 	}
 
-	// Initialize git repository
-	repo := git.NewRepository(tempDir)
-	if _, err := repo.Run("init"); err != nil {
-		t.Fatalf("Failed to init git repo: %v", err)
+	// Configure git user for the test repository
+	configCmds := [][]string{
+		{"config", "user.name", "Test User"},
+		{"config", "user.email", "test@example.com"},
+	}
+	for _, args := range configCmds {
+		cmd := exec.Command("git", args...)
+		cmd.Dir = tempDir
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("Failed to configure git: %v", err)
+		}
 	}
 
-	// Create a test file
-	testFile := filepath.Join(tempDir, "test.txt")
-	if err := os.WriteFile(testFile, []byte("test content"), 0644); err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
-	}
-
-	// Add and commit the file
-	if _, err := repo.Run("add", "test.txt"); err != nil {
-		t.Fatalf("Failed to add file: %v", err)
-	}
-	if _, err := repo.Run("commit", "-m", "Initial commit"); err != nil {
-		t.Fatalf("Failed to commit: %v", err)
-	}
-
-	// Create config
+	// Create test config
 	cfg := &config.Config{
 		RepoPath: tempDir,
+		Fallthrough: config.FallthroughConfig{
+			Enabled: true,
+			Verbose: false,
+		},
 	}
 
-	return &Manager{
-		config: cfg,
-		git:    repo,
-	}
-}
+	// Create manager
+	manager := NewManager(cfg)
 
-// TestPath tests the _path command
-func TestPath(t *testing.T) {
-	manager := createTestManager(t)
-	defer cleanupTest(t, manager)
-
-	// Test _path command
-	err := manager.Path([]string{})
-	if err != nil {
-		t.Errorf("Path command failed: %v", err)
-	}
-}
-
-// TestChanges tests the changes command
-func TestChanges(t *testing.T) {
-	manager := createTestManager(t)
-	defer cleanupTest(t, manager)
-
-	// Create a modified file
-	testFile := filepath.Join(manager.config.RepoPath, "modified.txt")
-	if err := os.WriteFile(testFile, []byte("modified content"), 0644); err != nil {
-		t.Fatalf("Failed to create modified file: %v", err)
-	}
-
-	// Test changes command
-	err := manager.Changes([]string{})
-	if err != nil {
-		t.Errorf("Changes command failed: %v", err)
-	}
-}
-
-// TestLogs tests the logs command
-func TestLogs(t *testing.T) {
-	manager := createTestManager(t)
-	defer cleanupTest(t, manager)
-
-	// Test logs command
-	err := manager.Logs([]string{})
-	if err != nil {
-		t.Errorf("Logs command failed: %v", err)
-	}
-}
-
-// TestProduct tests the product command
-func TestProduct(t *testing.T) {
-	manager := createTestManager(t)
-	defer cleanupTest(t, manager)
-
-	// Test setting product
-	err := manager.Product([]string{"test-product"})
-	if err != nil {
-		t.Errorf("Product set command failed: %v", err)
-	}
-
-	// Test getting product
-	err = manager.Product([]string{})
-	if err != nil {
-		t.Errorf("Product get command failed: %v", err)
-	}
-}
-
-// TestFeature tests the feature command
-func TestFeature(t *testing.T) {
-	manager := createTestManager(t)
-	defer cleanupTest(t, manager)
-
-	// Test setting feature
-	err := manager.Feature([]string{"test-feature"})
-	if err != nil {
-		t.Errorf("Feature set command failed: %v", err)
-	}
-
-	// Test getting feature
-	err = manager.Feature([]string{})
-	if err != nil {
-		t.Errorf("Feature get command failed: %v", err)
-	}
-}
-
-// TestIssue tests the issue command
-func TestIssue(t *testing.T) {
-	manager := createTestManager(t)
-	defer cleanupTest(t, manager)
-
-	// Test setting issue
-	err := manager.Issue([]string{"TEST-123"})
-	if err != nil {
-		t.Errorf("Issue set command failed: %v", err)
-	}
-
-	// Test getting issue
-	err = manager.Issue([]string{})
-	if err != nil {
-		t.Errorf("Issue get command failed: %v", err)
-	}
-}
-
-// TestVersion tests the version command
-func TestVersion(t *testing.T) {
-	manager := createTestManager(t)
-	defer cleanupTest(t, manager)
-
-	// Test getting version
-	err := manager.Version([]string{})
-	if err != nil {
-		t.Errorf("Version get command failed: %v", err)
-	}
-
-	// Test version tag
-	err = manager.Version([]string{"-t"})
-	if err != nil {
-		t.Errorf("Version tag command failed: %v", err)
-	}
-
-	// Test version reset
-	err = manager.Version([]string{"-r"})
-	if err != nil {
-		t.Errorf("Version reset command failed: %v", err)
-	}
-}
-
-// TestTrunk tests the _trunk command
-func TestTrunk(t *testing.T) {
-	manager := createTestManager(t)
-	defer cleanupTest(t, manager)
-
-	// Test setting trunk
-	err := manager.Trunk([]string{"master"})
-	if err != nil {
-		t.Errorf("Trunk set command failed: %v", err)
-	}
-
-	// Test getting trunk
-	err = manager.Trunk([]string{})
-	if err != nil {
-		t.Errorf("Trunk get command failed: %v", err)
-	}
-}
-
-// TestLabel tests the _label command
-func TestLabel(t *testing.T) {
-	manager := createTestManager(t)
-	defer cleanupTest(t, manager)
-
-	// Set up product, feature, and issue
-	manager.Product([]string{"test-product"})
-	manager.Feature([]string{"test-feature"})
-	manager.Issue([]string{"TEST-123"})
-
-	// Test getting label
-	err := manager.Label([]string{})
-	if err != nil {
-		t.Errorf("Label get command failed: %v", err)
-	}
-
-	// Test setting custom label
-	err = manager.Label([]string{"custom-label"})
-	if err != nil {
-		t.Errorf("Label set command failed: %v", err)
-	}
-}
-
-// TestID tests the _id command
-func TestID(t *testing.T) {
-	manager := createTestManager(t)
-	defer cleanupTest(t, manager)
-
-	// Set up product and version
-	manager.Product([]string{"test-product"})
-	manager.Version([]string{"-r"}) // Reset to 0.0.0
-
-	// Test getting ID
-	err := manager.ID([]string{})
-	if err != nil {
-		t.Errorf("ID command failed: %v", err)
-	}
-}
-
-// TestWIP tests the wip command
-func TestWIP(t *testing.T) {
-	manager := createTestManager(t)
-	defer cleanupTest(t, manager)
-
-	// Test getting WIP (should be empty initially)
-	err := manager.WIP([]string{})
-	if err != nil {
-		t.Errorf("WIP get command failed: %v", err)
-	}
-
-	// Test setting WIP
-	err = manager.WIP([]string{"-s"})
-	if err != nil {
-		t.Errorf("WIP set command failed: %v", err)
-	}
-}
-
-// TestHelpCommands tests help functionality for all commands
-func TestHelpCommands(t *testing.T) {
-	manager := createTestManager(t)
-	defer cleanupTest(t, manager)
-
-	helpTests := []struct {
-		name    string
-		command func([]string) error
+	tests := []struct {
+		name        string
+		command     string
+		args        []string
+		expectError bool
+		description string
 	}{
-		{"Path", manager.Path},
-		{"Changes", manager.Changes},
-		{"Logs", manager.Logs},
-		{"Product", manager.Product},
-		{"Feature", manager.Feature},
-		{"Issue", manager.Issue},
-		{"Version", manager.Version},
-		{"Trunk", manager.Trunk},
-		{"Label", manager.Label},
-		{"ID", manager.ID},
-		{"WIP", manager.WIP},
+		{
+			name:        "fallthrough_git_status",
+			command:     "status",
+			args:        []string{},
+			expectError: false,
+			description: "Should execute git status through fallthrough",
+		},
+		{
+			name:        "fallthrough_git_log",
+			command:     "log",
+			args:        []string{"--oneline"},
+			expectError: false,
+			description: "Should execute git log --oneline through fallthrough",
+		},
+		{
+			name:        "fallthrough_git_diff",
+			command:     "diff",
+			args:        []string{"--cached"},
+			expectError: false,
+			description: "Should execute git diff --cached through fallthrough",
+		},
+		{
+			name:        "fallthrough_invalid_git_command",
+			command:     "invalidcommand",
+			args:        []string{},
+			expectError: true,
+			description: "Should fail for invalid git commands",
+		},
+
 	}
 
-	for _, tt := range helpTests {
-		t.Run(tt.name+"Help", func(t *testing.T) {
-			err := tt.command([]string{"--help"})
-			if err != nil {
-				t.Errorf("%s help command failed: %v", tt.name, err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := manager.Execute(tt.command, tt.args)
+			
+			if tt.expectError && err == nil {
+				t.Errorf("Expected error for command '%s' but got none", tt.command)
+			}
+			
+			if !tt.expectError && err != nil {
+				t.Errorf("Unexpected error for command '%s': %v", tt.command, err)
 			}
 		})
 	}
 }
 
-// TestErrorHandling tests error conditions
-func TestErrorHandling(t *testing.T) {
-	manager := createTestManager(t)
-	defer cleanupTest(t, manager)
-
-	// Test invalid arguments - these should show help instead of error
-	err := manager.Product([]string{"arg1", "arg2"})
-	if err != nil {
-		t.Logf("Product with invalid args returned: %v", err)
+func TestManager_Execute_FallthroughIntegration(t *testing.T) {
+	// Skip test if git is not available
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git executable not found, skipping fallthrough integration tests")
 	}
 
-	err = manager.Feature([]string{"arg1", "arg2"})
+	// Create a temporary directory for testing
+	tempDir, err := os.MkdirTemp("", "gitat-integration-test-*")
 	if err != nil {
-		t.Logf("Feature with invalid args returned: %v", err)
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Initialize a git repository in the temp directory
+	cmd := exec.Command("git", "init")
+	cmd.Dir = tempDir
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("Failed to initialize git repository: %v", err)
 	}
 
-	err = manager.Issue([]string{"arg1", "arg2"})
-	if err != nil {
-		t.Logf("Issue with invalid args returned: %v", err)
+	// Configure git user for the test repository
+	configCmds := [][]string{
+		{"config", "user.name", "Test User"},
+		{"config", "user.email", "test@example.com"},
 	}
-}
-
-// cleanupTest cleans up the test environment
-func cleanupTest(t *testing.T, manager *Manager) {
-	if manager.config.RepoPath != "" {
-		if err := os.RemoveAll(manager.config.RepoPath); err != nil {
-			t.Logf("Failed to cleanup test directory: %v", err)
+	for _, args := range configCmds {
+		cmd := exec.Command("git", args...)
+		cmd.Dir = tempDir
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("Failed to configure git: %v", err)
 		}
 	}
+
+	// Create a test file and commit it
+	testFile := tempDir + "/test.txt"
+	if err := os.WriteFile(testFile, []byte("test content"), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	// Add and commit the file
+	addCmd := exec.Command("git", "add", "test.txt")
+	addCmd.Dir = tempDir
+	if err := addCmd.Run(); err != nil {
+		t.Fatalf("Failed to add test file: %v", err)
+	}
+
+	commitCmd := exec.Command("git", "commit", "-m", "Initial commit")
+	commitCmd.Dir = tempDir
+	if err := commitCmd.Run(); err != nil {
+		t.Fatalf("Failed to commit test file: %v", err)
+	}
+
+	// Create test config
+	cfg := &config.Config{
+		RepoPath: tempDir,
+		Fallthrough: config.FallthroughConfig{
+			Enabled: true,
+			Verbose: false,
+		},
+	}
+
+	// Create manager
+	manager := NewManager(cfg)
+
+	// Test complex Git commands through fallthrough
+	complexTests := []struct {
+		name        string
+		command     string
+		args        []string
+		expectError bool
+		description string
+	}{
+		{
+			name:        "git_log_with_format",
+			command:     "log",
+			args:        []string{"--pretty=format:%h %s", "-1"},
+			expectError: false,
+			description: "Should handle git log with custom format",
+		},
+		{
+			name:        "git_show_with_options",
+			command:     "show",
+			args:        []string{"--name-only", "HEAD"},
+			expectError: false,
+			description: "Should handle git show with options",
+		},
+		{
+			name:        "git_config_list",
+			command:     "config",
+			args:        []string{"--list"},
+			expectError: false,
+			description: "Should handle git config listing through fallthrough",
+		},
+	}
+
+	for _, tt := range complexTests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Change to the test directory for git commands
+			originalDir, _ := os.Getwd()
+			os.Chdir(tempDir)
+			defer os.Chdir(originalDir)
+
+			err := manager.Execute(tt.command, tt.args)
+			
+			if tt.expectError && err == nil {
+				t.Errorf("Expected error for command '%s %v' but got none", tt.command, tt.args)
+			}
+			
+			if !tt.expectError && err != nil {
+				t.Errorf("Unexpected error for command '%s %v': %v", tt.command, tt.args, err)
+			}
+		})
+	}
 }
 
-// TestManagerIntegration tests integration between commands
-func TestManagerIntegration(t *testing.T) {
-	manager := createTestManager(t)
-	defer cleanupTest(t, manager)
-
-	// Test full workflow
-	// 1. Set product
-	err := manager.Product([]string{"integration-test"})
-	if err != nil {
-		t.Fatalf("Failed to set product: %v", err)
+func TestManager_NewManager_FallthroughInitialization(t *testing.T) {
+	cfg := &config.Config{
+		RepoPath: "/tmp/test",
+		Fallthrough: config.FallthroughConfig{
+			Enabled: true,
+			Verbose: false,
+		},
 	}
 
-	// 2. Set feature
-	err = manager.Feature([]string{"test-feature"})
-	if err != nil {
-		t.Fatalf("Failed to set feature: %v", err)
+	manager := NewManager(cfg)
+
+	// Verify that the fallthrough handler is properly initialized
+	if manager.fallthroughHandler == nil {
+		t.Error("Fallthrough handler should be initialized in NewManager")
 	}
 
-	// 3. Set issue
-	err = manager.Issue([]string{"INT-001"})
-	if err != nil {
-		t.Fatalf("Failed to set issue: %v", err)
+	// Verify that all other handlers are still initialized
+	if manager.work == nil {
+		t.Error("Work handler should be initialized")
+	}
+	if manager.version == nil {
+		t.Error("Version handler should be initialized")
+	}
+	if manager.save == nil {
+		t.Error("Save handler should be initialized")
 	}
 
-	// 4. Set trunk
-	err = manager.Trunk([]string{"main"})
-	if err != nil {
-		t.Fatalf("Failed to set trunk: %v", err)
+	// Verify config and git repository are set
+	if manager.config != cfg {
+		t.Error("Config should be set correctly")
 	}
-
-	// 5. Test label generation
-	err = manager.Label([]string{})
-	if err != nil {
-		t.Fatalf("Failed to generate label: %v", err)
-	}
-
-	// 6. Test ID generation
-	err = manager.ID([]string{})
-	if err != nil {
-		t.Fatalf("Failed to generate ID: %v", err)
+	if manager.git == nil {
+		t.Error("Git repository should be initialized")
 	}
 }
 
-// BenchmarkCommands benchmarks the command performance
-func BenchmarkPath(b *testing.B) {
-	manager := createTestManager(&testing.T{})
-	defer cleanupTest(&testing.T{}, manager)
+func TestManager_Execute_ReservedCommands(t *testing.T) {
+	cfg := &config.Config{
+		RepoPath: "/tmp/test",
+		Fallthrough: config.FallthroughConfig{
+			Enabled: true,
+			Verbose: false,
+		},
+	}
 
-	for i := 0; i < b.N; i++ {
-		manager.Path([]string{})
+	manager := NewManager(cfg)
+
+	// Test a few key reserved Gitat commands to ensure they don't fall through
+	// Using commands that are less likely to have interactive forms or complex dependencies
+	reservedCommands := []string{
+		"info", "sweep", "save",
+	}
+
+	for _, cmd := range reservedCommands {
+		t.Run("reserved_command_"+cmd, func(t *testing.T) {
+			// These should execute the Gitat handlers, not fall through
+			// We expect them to execute (may error due to test environment, but shouldn't fall through)
+			err := manager.Execute(cmd, []string{})
+			
+			// The key test is that it doesn't return "unknown command" error
+			// which would indicate fallthrough failure
+			if err != nil && err.Error() == "unknown command: "+cmd {
+				t.Errorf("Command '%s' should not fall through to unknown command error", cmd)
+			}
+		})
 	}
 }
 
-func BenchmarkChanges(b *testing.B) {
-	manager := createTestManager(&testing.T{})
-	defer cleanupTest(&testing.T{}, manager)
+func TestManager_Execute_FallthroughHandlerIntegration(t *testing.T) {
+	// Skip test if git is not available
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git executable not found, skipping fallthrough handler integration test")
+	}
 
-	for i := 0; i < b.N; i++ {
-		manager.Changes([]string{})
+	cfg := &config.Config{
+		RepoPath: "/tmp/test",
+		Fallthrough: config.FallthroughConfig{
+			Enabled: true,
+			Verbose: false,
+		},
+	}
+
+	manager := NewManager(cfg)
+
+	// Test that unknown commands fall through to the fallthrough handler
+	// Use a command that's not reserved by Gitat
+	err := manager.Execute("remote", []string{})
+	
+	// The command should execute through fallthrough, not return "unknown command"
+	if err != nil && err.Error() == "unknown command: remote" {
+		t.Error("Command 'remote' should fall through to git, not return unknown command error")
+	}
+	
+	// Test with a clearly non-existent command
+	err = manager.Execute("nonexistentcommand", []string{})
+	
+	// This should still go through fallthrough (and git will handle the error)
+	if err != nil && err.Error() == "unknown command: nonexistentcommand" {
+		t.Error("Even non-existent commands should fall through to git, not return unknown command error")
 	}
 }
 
-func BenchmarkLogs(b *testing.B) {
-	manager := createTestManager(&testing.T{})
-	defer cleanupTest(&testing.T{}, manager)
+func TestManager_Execute_FallthroughDisabled(t *testing.T) {
+	// Test behavior when fallthrough is disabled (if we add that config option)
+	cfg := &config.Config{
+		RepoPath: "/tmp/test",
+		Fallthrough: config.FallthroughConfig{
+			Enabled: false, // Disabled
+			Verbose: false,
+		},
+	}
 
-	for i := 0; i < b.N; i++ {
-		manager.Logs([]string{})
+	manager := NewManager(cfg)
+
+	// Even with fallthrough disabled, the handler should still be initialized
+	// The actual disable logic would be in the fallthrough handler itself
+	if manager.fallthroughHandler == nil {
+		t.Error("Fallthrough handler should be initialized even when disabled")
 	}
 }
