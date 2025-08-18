@@ -25,13 +25,15 @@ func NewApp(cfg *config.Config) *App {
 // Run executes the CLI application with the given arguments
 func (a *App) Run(args []string) error {
 	if len(args) == 0 {
-		return a.showUsage()
+		// Requirement 4.1: When user executes `git @` with no arguments, show Git help
+		return a.cmds.Execute("", []string{})
 	}
 
 	command := args[0]
 	commandArgs := args[1:]
 
-	// Handle help and version commands
+	// Handle help and version commands - these should show Gitat info, not fall through
+	// Requirements 4.2 and 4.3: --version and --help should show Gitat information
 	switch command {
 	case "help", "-h", "--help":
 		return a.showUsage()

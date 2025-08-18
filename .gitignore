@@ -21,6 +21,10 @@ go.work
 build/
 gitat
 gitat.exe
+gitat-*
+
+# Correct binary name (should be tracked)
+# git-@
 
 # IDE files
 .vscode/

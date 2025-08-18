@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Pre-commit hook to prevent committing deprecated binary names
+# This ensures we never accidentally commit 'gitat' instead of 'git-@'
+
+echo "🔍 Checking for deprecated binary names..."
+
+# Check if deprecated binary exists
+if [ -f "gitat" ]; then
+    echo "❌ Error: Found deprecated binary 'gitat'"
+    echo "   The correct binary name is 'git-@'"
+    echo "   Please run 'make clean' and rebuild with 'make build-local'"
+    exit 1
+fi
+
+# Check if gitat is being added to git
+if git diff --cached --name-only | grep -q "^gitat$"; then
+    echo "❌ Error: Attempting to commit deprecated binary 'gitat'"
+    echo "   The correct binary name is 'git-@'"
+    echo "   Please remove 'gitat' from staging and use 'git-@' instead"
+    exit 1
+fi
+
+# Check for specific problematic patterns that would create 'gitat' binary
+# Look for exact patterns we want to prevent
+PROBLEMATIC_PATTERNS=$(git diff --cached | grep -E "^[+].*(\-o\s+gitat\s|\-o\s+gitat$|BINARY_NAME=gitat)" | grep -v "DEPRECATED_BINARY_NAME")
+
+if [ -n "$PROBLEMATIC_PATTERNS" ]; then
+    echo "❌ Error: Found build command that would create 'gitat' binary:"
+    echo "$PROBLEMATIC_PATTERNS"
+    echo "   Please use 'git-@' as the binary name instead"
+    exit 1
+fi
+
+echo "✅ Binary name validation passed"
+exit 0
