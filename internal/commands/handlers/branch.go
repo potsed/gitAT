@@ -253,14 +253,14 @@ func (s *BranchHandler) switchBranch(branchName string) error {
 
 // showUsage displays the branch command usage
 func (s *BranchHandler) showUsage() error {
-	usage := "# Branch Command\n\n" +
+	usage := "# Sprout Command (Branch Management)\n\n" +
 		"Manages Git branches with interactive creation, deletion, and switching.\n\n" +
 		"## Usage\n\n" +
 		"```bash\n" +
-		"git @ branch [action] [branch-name] [options]\n" +
-		"git @ branch create [name]\n" +
-		"git @ branch delete [name]\n" +
-		"git @ branch switch [name]\n" +
+		"git @ sprout [action] [branch-name] [options]\n" +
+		"git @ sprout create [name]\n" +
+		"git @ sprout delete [name]\n" +
+		"git @ sprout switch [name]\n" +
 		"```\n\n" +
 		"## Actions\n\n" +
 		"- **list** (default): List all branches\n" +
@@ -276,19 +276,19 @@ func (s *BranchHandler) showUsage() error {
 		"## Examples\n\n" +
 		"```bash\n" +
 		"# List all local branches\n" +
-		"git @ branch\n\n" +
+		"git @ sprout\n\n" +
 		"# List remote branches\n" +
-		"git @ branch --remote\n\n" +
+		"git @ sprout --remote\n\n" +
 		"# Create a new branch\n" +
-		"git @ branch create feature/new-feature\n\n" +
+		"git @ sprout create feature/new-feature\n\n" +
 		"# Create with interactive name\n" +
-		"git @ branch create\n\n" +
+		"git @ sprout create\n\n" +
 		"# Switch to a branch\n" +
-		"git @ branch switch develop\n\n" +
+		"git @ sprout switch develop\n\n" +
 		"# Delete a branch\n" +
-		"git @ branch delete old-feature\n\n" +
+		"git @ sprout delete old-feature\n\n" +
 		"# Force delete a branch\n" +
-		"git @ branch delete old-feature --force\n" +
+		"git @ sprout delete old-feature --force\n" +
 		"```\n\n" +
 		"## Workflow\n\n" +
 		"### Creating Branches\n" +

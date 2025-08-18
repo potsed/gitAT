@@ -15,7 +15,7 @@ import (
 // FallthroughHandler handles commands that should fall through to standard Git
 type FallthroughHandler struct {
 	BaseHandler
-	processExecutor *utils.ProcessExecutor
+	processExecutor  *utils.ProcessExecutor
 	reservedCommands map[string]bool
 }
 
@@ -23,52 +23,52 @@ type FallthroughHandler struct {
 func NewFallthroughHandler(cfg *config.Config, gitRepo *git.Repository) *FallthroughHandler {
 	processExecutor := utils.NewProcessExecutor()
 	processExecutor.SetVerbose(cfg.Fallthrough.Verbose)
-	
+
 	return &FallthroughHandler{
 		BaseHandler:     NewBaseHandler(cfg, gitRepo),
 		processExecutor: processExecutor,
 		reservedCommands: map[string]bool{
 			// Gitat-specific commands that should not fall through
-			"version":    true,
-			"help":       true,
-			"branch":     true,
-			"feature":    true,
-			"hotfix":     true,
-			"info":       true,
-			"issue":      true,
-			"label":      true,
-			"pr":         true,
-			"product":    true,
-			"release":    true,
-			"save":       true,
-			"squash":     true,
-			"sweep":      true,
-			"tag":        true,
-			"wip":        true,
-			"work":       true,
+			"semver":  true, // Renamed from "version"
+			"help":    true,
+			"sprout":  true, // Renamed from "branch"
+			"feature": true,
+			"hotfix":  true,
+			"info":    true,
+			"issue":   true,
+			"label":   true,
+			"pr":      true,
+			"product": true,
+			"release": true,
+			"save":    true,
+			"squash":  true,
+			"sweep":   true,
+			"dub":     true, // Renamed from "tag"
+			"wip":     true,
+			"work":    true,
 			// Utility commands
-			"changes":    true,
-			"logs":       true,
-			"hash":       true,
-			"id":         true,
-			"path":       true,
-			"master":     true,
-			"root":       true,
-			"ignore":     true,
-			"initlocal":  true,
-			"initremote": true,
-			"security":   true,
-			"_go":        true,
-			"_label":     true,
-			"_id":        true,
-			"_path":      true,
-			"_trunk":     true,
-			"_security":  true,
+			"changes":      true,
+			"logz":         true, // Renamed from "logs"
+			"shasum":       true, // Renamed from "hash"
+			"id":           true,
+			"path":         true,
+			"master":       true,
+			"root":         true,
+			"ignore":       true,
+			"setup-local":  true,
+			"setup-remote": true,
+			"security":     true,
+			"_go":          true,
+			"_label":       true,
+			"_id":          true,
+			"_path":        true,
+			"_trunk":       true,
+			"_security":    true,
 			// Special flags that should show Gitat info, not fall through
-			"-v":         true,
-			"--version":  true,
-			"-h":         true,
-			"--help":     true,
+			"-v":        true,
+			"--version": true,
+			"-h":        true,
+			"--help":    true,
 		},
 	}
 }
@@ -95,7 +95,7 @@ func (f *FallthroughHandler) SetTestResponses(responses map[string][]string) {
 // Execute executes a Git command through fallthrough mechanism
 func (f *FallthroughHandler) Execute(command string, args []string) error {
 	startTime := time.Now()
-	
+
 	// Log debug information if verbose mode is enabled
 	if f.config.Fallthrough.Verbose {
 		f.logDebug("Starting fallthrough execution", map[string]interface{}{
@@ -163,21 +163,21 @@ func (f *FallthroughHandler) Execute(command string, args []string) error {
 
 	// Preserve complex arguments and execute the Git command
 	preservedArgs := f.PreserveComplexArguments(args)
-	
+
 	// Execute the command and measure timing
 	err := f.executeGitCommand(command, preservedArgs)
-	
+
 	// Log timing information
 	duration := time.Since(startTime)
 	if f.config.Fallthrough.Verbose {
 		f.logTiming("Command execution completed", command, args, duration, err)
 	}
-	
+
 	// Enhance error propagation from underlying Git commands
 	if err != nil {
 		return f.enhanceGitError(command, args, err)
 	}
-	
+
 	return nil
 }
 
@@ -206,14 +206,14 @@ func (f *FallthroughHandler) shouldFallthrough(command string) bool {
 // executeGitCommand executes the Git command with preserved arguments
 func (f *FallthroughHandler) executeGitCommand(command string, args []string) error {
 	var gitArgs []string
-	
+
 	// Special case: empty command means just run "git" with no subcommand (shows Git help)
 	if strings.TrimSpace(command) == "" {
 		gitArgs = args // Just pass through any arguments (should be empty for help case)
 	} else {
 		// Prepare the full argument list for Git
 		gitArgs = []string{command}
-		
+
 		// Preserve all arguments exactly as provided
 		// Go's exec.Command handles argument separation correctly,
 		// so we don't need to do any special escaping or parsing
@@ -232,7 +232,7 @@ func (f *FallthroughHandler) ValidateArguments(args []string) error {
 		if strings.Contains(arg, "$(") || strings.Contains(arg, "`") {
 			return fmt.Errorf("potentially unsafe argument at position %d: %s", i, arg)
 		}
-		
+
 		// Allow all other arguments including those with quotes, spaces, etc.
 		// Go's exec.Command handles these safely
 	}
@@ -247,7 +247,7 @@ func (f *FallthroughHandler) PreserveComplexArguments(args []string) []string {
 	// - Quoted arguments maintain their content without the quotes being passed to the process
 	// - Special characters are preserved within arguments
 	// - Multiple flags and options are handled as separate arguments
-	
+
 	// We don't need to modify the arguments, just return them as-is
 	// The key is that each element in the slice represents one argument
 	return args
@@ -263,12 +263,12 @@ func (f *FallthroughHandler) IsGitCommand(command string) bool {
 	// Try to get help for the command to see if it exists
 	// We use git help <command> which returns 0 for valid commands
 	output, err := f.processExecutor.ExecuteCommandWithOutput("git", []string{"help", command})
-	
+
 	// If the command succeeded and doesn't contain "No manual entry"
 	if err == nil {
 		outputStr := string(output)
-		return !strings.Contains(outputStr, "No manual entry") && 
-			   !strings.Contains(outputStr, "is not a git command")
+		return !strings.Contains(outputStr, "No manual entry") &&
+			!strings.Contains(outputStr, "is not a git command")
 	}
 
 	// If there was an exit error, check the exit code
@@ -289,7 +289,7 @@ func (f *FallthroughHandler) IsGitAlias(command string) bool {
 
 	// Check if the command is defined as an alias in Git config
 	output, err := f.processExecutor.ExecuteCommandWithOutput("git", []string{"config", "--get", "alias." + command})
-	
+
 	// If we got output without error, it's an alias
 	return err == nil && len(strings.TrimSpace(string(output))) > 0
 }
@@ -299,26 +299,26 @@ func (f *FallthroughHandler) IsGitAlias(command string) bool {
 func (f *FallthroughHandler) HandleSubcommands(command string, args []string) (bool, error) {
 	// Some Git commands have subcommands (e.g., git remote add, git config --global)
 	// We need to handle these as complete command structures
-	
+
 	// Commands known to have subcommands
 	subcommandCommands := map[string]bool{
-		"remote":     true,
-		"config":     true,
-		"submodule":  true,
-		"worktree":   true,
-		"notes":      true,
-		"bundle":     true,
-		"credential": true,
+		"remote":        true,
+		"config":        true,
+		"submodule":     true,
+		"worktree":      true,
+		"notes":         true,
+		"bundle":        true,
+		"credential":    true,
 		"filter-branch": true,
 	}
-	
+
 	// If this is a subcommand-capable command, validate the full structure
 	if subcommandCommands[command] {
 		// For subcommand validation, we can try a dry-run or help to see if it's valid
 		// But for now, we'll trust Git to handle the validation
 		return true, nil
 	}
-	
+
 	return false, nil
 }
 
@@ -334,19 +334,19 @@ func (f *FallthroughHandler) ValidateComplexCommand(command string, args []strin
 		}
 		return nil
 	}
-	
+
 	// Check if it's a valid Git command
 	if f.IsGitCommand(command) {
 		return nil
 	}
-	
+
 	// Check if it has subcommands
 	if hasSubcommands, err := f.HandleSubcommands(command, args); err != nil {
 		return err
 	} else if hasSubcommands {
 		return nil
 	}
-	
+
 	// If none of the above, it might still be a valid Git command that we can't validate
 	// Let Git itself handle the final validation
 	return nil
@@ -376,7 +376,7 @@ func (f *FallthroughHandler) logTiming(message, command string, args []string, d
 	if err != nil {
 		status = "ERROR"
 	}
-	
+
 	fmt.Fprintf(os.Stderr, "[GITAT TIMING] %s: git %s", message, command)
 	if len(args) > 0 {
 		fmt.Fprintf(os.Stderr, " %s", strings.Join(args, " "))
@@ -409,30 +409,30 @@ You can test this by running: git --version`)
 // createUnknownCommandError creates a helpful error message for unknown commands
 func (f *FallthroughHandler) createUnknownCommandError(command string, args []string) error {
 	var suggestions []string
-	
+
 	// Suggest similar Gitat commands
 	gitAtCommands := []string{
-		"branch", "feature", "hotfix", "info", "issue", "label", "pr", 
+		"branch", "feature", "hotfix", "info", "issue", "label", "pr",
 		"product", "release", "save", "squash", "sweep", "tag", "wip", "work",
-		"changes", "logs", "hash", "id", "path", "master", "root", "ignore",
+		"changes", "logz", "shasum", "id", "path", "master", "root", "ignore",
 	}
-	
+
 	// Find similar commands using simple string matching
 	for _, cmd := range gitAtCommands {
 		if strings.Contains(cmd, command) || strings.Contains(command, cmd) {
 			suggestions = append(suggestions, cmd)
 		}
 	}
-	
+
 	errorMsg := fmt.Sprintf("Unknown command: %s", command)
-	
+
 	if len(suggestions) > 0 {
 		errorMsg += fmt.Sprintf("\n\nDid you mean one of these Gitat commands?\n")
 		for _, suggestion := range suggestions {
 			errorMsg += fmt.Sprintf("  • git @ %s\n", suggestion)
 		}
 	}
-	
+
 	errorMsg += fmt.Sprintf(`
 Fallthrough is currently disabled. To enable Git command fallthrough:
   git config at.fallthrough.enabled true
@@ -446,7 +446,7 @@ Available Gitat commands:
   • git @ work        - Work with current changes
 
 For a complete list of commands, run: git @ help`)
-	
+
 	return fmt.Errorf("%s", errorMsg)
 }
 
@@ -512,7 +512,7 @@ func (f *FallthroughHandler) enhanceGitError(command string, args []string, gitE
 			// Common Git error - usually means command failed but is valid
 			return &utils.ExitError{
 				ExitCode: exitErr.ExitCode,
-				Err: fmt.Errorf("Git command failed: git %s %s\n\nOriginal error: %v\n\nThis error came from Git itself. For help with this Git command, run:\n  git help %s", 
+				Err: fmt.Errorf("Git command failed: git %s %s\n\nOriginal error: %v\n\nThis error came from Git itself. For help with this Git command, run:\n  git help %s",
 					command, strings.Join(args, " "), exitErr.Err, command),
 			}
 		case 127:
@@ -530,34 +530,34 @@ For help with a specific command, run: git help <command>`, command)
 			// Git repository error
 			return &utils.ExitError{
 				ExitCode: exitErr.ExitCode,
-				Err: fmt.Errorf("Git repository error: %v\n\nThis usually means you're not in a Git repository or the repository is corrupted.\nTo initialize a new repository, run: git init", exitErr.Err),
+				Err:      fmt.Errorf("Git repository error: %v\n\nThis usually means you're not in a Git repository or the repository is corrupted.\nTo initialize a new repository, run: git init", exitErr.Err),
 			}
 		default:
 			// Other exit codes - preserve original error but add context
 			return &utils.ExitError{
 				ExitCode: exitErr.ExitCode,
-				Err: fmt.Errorf("Git command failed with exit code %d: git %s %s\n\nOriginal error: %v", 
+				Err: fmt.Errorf("Git command failed with exit code %d: git %s %s\n\nOriginal error: %v",
 					exitErr.ExitCode, command, strings.Join(args, " "), exitErr.Err),
 			}
 		}
 	}
-	
+
 	// Check for command not found errors
 	if utils.IsCommandNotFound(gitErr) {
 		return f.createGitNotFoundError()
 	}
-	
+
 	// For other errors, add helpful context
-	return fmt.Errorf("Git command execution failed: git %s %s\n\nError: %v\n\nFor help with this command, run: git help %s", 
+	return fmt.Errorf("Git command execution failed: git %s %s\n\nError: %v\n\nFor help with this command, run: git help %s",
 		command, strings.Join(args, " "), gitErr, command)
 }
 
 // GetAvailableGitAtCommands returns a list of available Gitat commands for suggestions
 func (f *FallthroughHandler) GetAvailableGitAtCommands() []string {
 	return []string{
-		"branch", "feature", "hotfix", "info", "issue", "label", "pr", 
+		"branch", "feature", "hotfix", "info", "issue", "label", "pr",
 		"product", "release", "save", "squash", "sweep", "tag", "wip", "work",
-		"changes", "logs", "hash", "id", "path", "master", "root", "ignore",
+		"changes", "logz", "shasum", "id", "path", "master", "root", "ignore",
 		"initlocal", "initremote", "security", "version", "help",
 	}
 }
@@ -566,31 +566,31 @@ func (f *FallthroughHandler) GetAvailableGitAtCommands() []string {
 func (f *FallthroughHandler) SuggestSimilarCommands(command string) []string {
 	var suggestions []string
 	availableCommands := f.GetAvailableGitAtCommands()
-	
+
 	// Simple similarity check - contains or is contained
 	for _, cmd := range availableCommands {
 		if strings.Contains(cmd, command) || strings.Contains(command, cmd) {
 			suggestions = append(suggestions, cmd)
 		}
 	}
-	
+
 	// Try common typos and abbreviations (even if we have direct matches)
 	commonMappings := map[string][]string{
-		"st":     {"status"}, // Common Git alias, suggest fallthrough
-		"co":     {"checkout"},
-		"br":     {"branch"},
-		"ci":     {"commit"},
-		"stat":   {"status"},
-		"check":  {"checkout"},
-		"comm":   {"commit"},
-		"feat":   {"feature"},
-		"hot":    {"hotfix"},
-		"rel":    {"release"},
-		"inf":    {"info"},
-		"iss":    {"issue"},
-		"lab":    {"label"},
+		"st":    {"status"}, // Common Git alias, suggest fallthrough
+		"co":    {"checkout"},
+		"br":    {"branch"},
+		"ci":    {"commit"},
+		"stat":  {"status"},
+		"check": {"checkout"},
+		"comm":  {"commit"},
+		"feat":  {"feature"},
+		"hot":   {"hotfix"},
+		"rel":   {"release"},
+		"inf":   {"info"},
+		"iss":   {"issue"},
+		"lab":   {"label"},
 	}
-	
+
 	if mapped, exists := commonMappings[command]; exists {
 		// Add mapped suggestions, avoiding duplicates
 		for _, mappedCmd := range mapped {
@@ -606,6 +606,6 @@ func (f *FallthroughHandler) SuggestSimilarCommands(command string) []string {
 			}
 		}
 	}
-	
+
 	return suggestions
 }

@@ -57,26 +57,27 @@ Commands:
   save "message"               Securely save changes with validation
   squash [branch]              Squash commits with auto-detection of parent branch
   pr [options]                 Create Pull Requests with auto-description generation
-  branch                       Manage working branch configuration
+  sprout                       Manage working branch configuration
   sweep                        Clean up local branches (merged + remote-deleted)
   info                         Comprehensive status report from all commands
-  hash                         Detailed branch status and commit relationships
+  shasum                       Detailed branch status and commit relationships
   product [<name>]             Product name configuration
   feature [<name>]             Feature name configuration
   issue [<id>]                 Issue/task identifier configuration
-  version                      Semantic versioning management
+  semver                       Semantic versioning management
+  dub                          Enhanced tag creation with version integration
   release                      Create releases with proper tagging
   master, root                 Switch to trunk branches
   wip                          Work in progress management
   changes                      View uncommitted changes
-  logs                         View commit history
+  logz                         View commit history
   _label                       Generate commit labels
   _id                          Generate unique project identifiers
   _path                        Get repository path
   _trunk                       Manage trunk branch configuration
   ignore                       Add patterns to .gitignore
-  initlocal                    Initialize local repository with branch structure
-  initremote                   Initialize remote repository with basic structure
+  setup-local                  Initialize local repository with branch structure
+  setup-remote                 Initialize remote repository with basic structure
   _security                    Security utilities and status
   _go                          Initialize GitAT for current repository
 

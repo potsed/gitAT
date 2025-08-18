@@ -481,20 +481,20 @@ func (v *VersionHandler) writeVersionLog(message string) error {
 
 // showUsage displays the version command usage
 func (v *VersionHandler) showUsage() error {
-	usage := `# Version Command
+	usage := `# Semantic Version Command
 
 Manages semantic versioning for the project.
 
 ## Usage
 
-git @ version                    # Show current version
-git @ version -t                 # Show version tag (v1.2.3)
-git @ version --reset            # Reset version to 0.0.0
-git @ version --set              # Set version interactively
-git @ version -M                 # Increment major version
-git @ version -m                 # Increment minor version
-git @ version -b                 # Increment fix version
-git @ version -Mmb               # Increment all (major, minor, fix)
+git @ semver                     # Show current version
+git @ semver -t                  # Show version tag (1.2.3)
+git @ semver --reset             # Reset version to 0.0.0
+git @ semver --set               # Set version interactively
+git @ semver -M                  # Increment major version
+git @ semver -m                  # Increment minor version
+git @ semver -b                  # Increment fix version
+git @ semver -Mmb                # Increment all (major, minor, fix)
 
 ## Options
 
@@ -509,19 +509,19 @@ git @ version -Mmb               # Increment all (major, minor, fix)
 ## Examples
 
 # Show current version
-git @ version
+git @ semver
 
 # Increment major version
-git @ version -M
+git @ semver -M
 
 # Increment multiple components
-git @ version -Mmb
+git @ semver -Mmb
 
 # Reset version
-git @ version --reset
+git @ semver --reset
 
 # Set version interactively
-git @ version --set
+git @ semver --set
 
 ## Version Format
 

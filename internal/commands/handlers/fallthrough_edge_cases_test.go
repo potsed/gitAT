@@ -18,13 +18,13 @@ func TestFallthroughHandler_EdgeCases(t *testing.T) {
 	gitRepo := git.NewRepository(".")
 
 	tests := []struct {
-		name           string
-		command        string
-		args           []string
-		expectError    bool
-		errorContains  string
-		testResponses  map[string][]string
-		description    string
+		name          string
+		command       string
+		args          []string
+		expectError   bool
+		errorContains string
+		testResponses map[string][]string
+		description   string
 	}{
 		{
 			name:        "empty command shows git help",
@@ -113,7 +113,7 @@ func TestFallthroughHandler_EdgeCases(t *testing.T) {
 				if err == nil {
 					t.Errorf("Expected error but got none for test: %s", tt.description)
 				} else if tt.errorContains != "" && !strings.Contains(err.Error(), tt.errorContains) {
-					t.Errorf("Expected error to contain '%s' but got '%s' for test: %s", 
+					t.Errorf("Expected error to contain '%s' but got '%s' for test: %s",
 						tt.errorContains, err.Error(), tt.description)
 				}
 			} else {
@@ -137,10 +137,10 @@ func TestFallthroughHandler_ReservedCommands(t *testing.T) {
 
 	// Test all reserved commands to ensure they don't fall through
 	reservedCommands := []string{
-		"version", "help", "branch", "feature", "hotfix", "info", "issue",
+		"semver", "help", "sprout", "feature", "hotfix", "info", "issue",
 		"label", "pr", "product", "release", "save", "squash", "sweep",
-		"tag", "wip", "work", "changes", "logs", "hash", "id", "path",
-		"master", "root", "ignore", "initlocal", "initremote", "security",
+		"dub", "wip", "work", "changes", "logz", "shasum", "id", "path",
+		"master", "root", "ignore", "setup-local", "setup-remote", "security",
 		"_go", "_label", "_id", "_path", "_trunk", "_security",
 		"-v", "--version", "-h", "--help",
 	}
@@ -198,7 +198,7 @@ func TestFallthroughHandler_GitAliasDetection(t *testing.T) {
 			isAlias := handler.IsGitAlias(tt.command)
 
 			if isAlias != tt.expectAlias {
-				t.Errorf("Expected IsGitAlias(%s) to be %v but got %v", 
+				t.Errorf("Expected IsGitAlias(%s) to be %v but got %v",
 					tt.command, tt.expectAlias, isAlias)
 			}
 		})
@@ -250,7 +250,7 @@ func TestFallthroughHandler_SubcommandHandling(t *testing.T) {
 			}
 
 			if hasSubcommands != tt.expectSubcommands {
-				t.Errorf("Expected HandleSubcommands(%s) to return %v but got %v", 
+				t.Errorf("Expected HandleSubcommands(%s) to return %v but got %v",
 					tt.command, tt.expectSubcommands, hasSubcommands)
 			}
 		})
