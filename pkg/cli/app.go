@@ -67,7 +67,7 @@ Commands:
   semver                       Semantic versioning management
   dub                          Enhanced tag creation with version integration
   release                      Create releases with proper tagging
-  master, root                 Switch to trunk branches
+  main, master, root           Switch to trunk branches (main/master)
   wip                          Work in progress management
   changes                      View uncommitted changes
   logz                         View commit history
@@ -103,6 +103,7 @@ GitAT includes comprehensive man pages:
   man git-@-sweep  # Branch cleanup
   man git-@-logz   # Commit history
   man git-@-shasum # Branch status
+  man git-@-main   # Switch to trunk branch
 `)
 	return nil
 }

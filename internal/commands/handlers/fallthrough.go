@@ -52,6 +52,7 @@ func NewFallthroughHandler(cfg *config.Config, gitRepo *git.Repository) *Fallthr
 			"shasum":       true, // Renamed from "hash"
 			"id":           true,
 			"path":         true,
+			"main":         true,
 			"master":       true,
 			"root":         true,
 			"ignore":       true,
@@ -414,7 +415,7 @@ func (f *FallthroughHandler) createUnknownCommandError(command string, args []st
 	gitAtCommands := []string{
 		"branch", "feature", "hotfix", "info", "issue", "label", "pr",
 		"product", "release", "save", "squash", "sweep", "tag", "wip", "work",
-		"changes", "logz", "shasum", "id", "path", "master", "root", "ignore",
+		"changes", "logz", "shasum", "id", "path", "main", "master", "root", "ignore",
 	}
 
 	// Find similar commands using simple string matching
@@ -557,7 +558,7 @@ func (f *FallthroughHandler) GetAvailableGitAtCommands() []string {
 	return []string{
 		"branch", "feature", "hotfix", "info", "issue", "label", "pr",
 		"product", "release", "save", "squash", "sweep", "tag", "wip", "work",
-		"changes", "logz", "shasum", "id", "path", "master", "root", "ignore",
+		"changes", "logz", "shasum", "id", "path", "main", "master", "root", "ignore",
 		"initlocal", "initremote", "security", "version", "help",
 	}
 }

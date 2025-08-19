@@ -35,6 +35,7 @@ type Manager struct {
 	tag                *handlers.TagHandler
 	logz               *handlers.LogzHandler
 	shasum             *handlers.ShasumHandler
+	main               *handlers.MainHandler
 	fallthroughHandler *handlers.FallthroughHandler
 }
 
@@ -69,6 +70,7 @@ func NewManager(cfg *config.Config) *Manager {
 		tag:                handlers.NewTagHandler(cfg, gitRepo),
 		logz:               handlers.NewLogzHandler(cfg, gitRepo),
 		shasum:             handlers.NewShasumHandler(cfg, gitRepo),
+		main:               handlers.NewMainHandler(cfg, gitRepo),
 		fallthroughHandler: handlers.NewFallthroughHandler(cfg, gitRepo),
 	}
 }
@@ -131,8 +133,8 @@ func (m *Manager) Execute(command string, args []string) error {
 		return m.utility.ExecuteID(args)
 	case "path":
 		return m.utility.ExecutePath(args)
-	case "master":
-		return m.utility.ExecuteMaster(args)
+	case "main", "master", "root":
+		return m.main.Execute(args)
 	default:
 		return m.fallthroughHandler.Execute(command, args)
 	}

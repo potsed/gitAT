@@ -73,6 +73,8 @@ GitAT includes comprehensive man pages for the main command and key subcommands:
 - `git-@-sweep` - Branch cleanup
 - `git-@-logz` - Commit history (renamed from `logs`)
 - `git-@-shasum` - Branch status information (renamed from `hash`)
+- `git-@-main` - Switch to trunk branch with WIP support (aliases: `master`, `root`)
+- `git-@-wip` - Work in progress management
 
 To install man pages:
 ```bash
