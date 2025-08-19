@@ -55,6 +55,10 @@ func NewFallthroughHandler(cfg *config.Config, gitRepo *git.Repository) *Fallthr
 			"main":         true,
 			"master":       true,
 			"root":         true,
+			"changelog":    true,
+			"rebase":       true,
+			"commitizen":  true,
+			"cz":           true, // Alias for commitizen
 			"ignore":       true,
 			"setup-local":  true,
 			"setup-remote": true,
@@ -416,6 +420,7 @@ func (f *FallthroughHandler) createUnknownCommandError(command string, args []st
 		"branch", "feature", "hotfix", "info", "issue", "label", "pr",
 		"product", "release", "save", "squash", "sweep", "tag", "wip", "work",
 		"changes", "logz", "shasum", "id", "path", "main", "master", "root", "ignore",
+		"changelog", "rebase", "commitizen", "cz",
 	}
 
 	// Find similar commands using simple string matching
@@ -559,6 +564,7 @@ func (f *FallthroughHandler) GetAvailableGitAtCommands() []string {
 		"branch", "feature", "hotfix", "info", "issue", "label", "pr",
 		"product", "release", "save", "squash", "sweep", "tag", "wip", "work",
 		"changes", "logz", "shasum", "id", "path", "main", "master", "root", "ignore",
+		"changelog", "rebase", "commitizen", "cz",
 		"initlocal", "initremote", "security", "version", "help",
 	}
 }

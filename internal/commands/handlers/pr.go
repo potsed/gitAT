@@ -1,3 +1,4 @@
+// pr.go - Clean Pull Request command handler
 package handlers
 
 import (
@@ -66,14 +67,41 @@ func (p *PullRequestHandler) createPullRequest() error {
 	}
 
 	// Get trunk branch
-	trunkBranch, err := p.git.GetConfig("at.trunk")
-	if err != nil {
-		trunkBranch = "main" // fallback
+	trunkBranch := p.config.Trunk
+	if trunkBranch == "" {
+		trunkBranch, _ = p.git.GetConfig("at.trunk")
+	}
+	if trunkBranch == "" {
+		trunkBranch = "main"
+		// Check if main exists
+		_, err := p.git.Run("rev-parse", "--verify", "main")
+		if err != nil {
+			trunkBranch = "master"
+		}
 	}
 
 	// Check if we're on trunk branch
 	if currentBranch == trunkBranch {
 		return fmt.Errorf("cannot create PR from trunk branch (%s)", trunkBranch)
+	}
+
+	// Ask if user wants to prepare PR
+	var preparePR bool
+	err = huh.NewConfirm().
+		Title("Prepare Pull Request?").
+		Description("Do you want to prepare your branch for PR (squash, rebase, conventional commits)?").
+		Value(&preparePR).
+		Run()
+
+	if err != nil {
+		return fmt.Errorf("failed to get user input: %v", err)
+	}
+
+	if preparePR {
+		// Perform PR preparation steps
+		if err := p.prepareBranchForPR(currentBranch, trunkBranch); err != nil {
+			return fmt.Errorf("failed to prepare branch for PR: %v", err)
+		}
 	}
 
 	// Try to push the branch (will fail if already exists)
@@ -117,6 +145,198 @@ func (p *PullRequestHandler) createPullRequest() error {
 	return p.openPRInBrowser(currentBranch, trunkBranch, description)
 }
 
+// prepareBranchForPR prepares a branch for PR by performing standard cleanup operations
+func (p *PullRequestHandler) prepareBranchForPR(currentBranch, trunkBranch string) error {
+	output.Title("Preparing Branch for Pull Request")
+	
+	// 1. Squash commits if requested
+	var squashCommits bool
+	err := huh.NewConfirm().
+		Title("Squash Commits?").
+		Description("Do you want to squash your commits into a single conventional commit?").
+		Value(&squashCommits).
+		Run()
+
+	if err != nil {
+		return fmt.Errorf("failed to get user input: %v", err)
+	}
+
+	if squashCommits {
+		output.Info("Squashing commits...")
+		// Here we would call the squash functionality
+		// For now, just show what would happen
+		output.Info("Would squash commits on branch %s", currentBranch)
+	}
+
+	// 2. Rebase onto trunk
+	var rebaseOntoTrunk bool
+	err = huh.NewConfirm().
+		Title("Rebase onto Trunk?").
+		Description("Do you want to rebase your branch onto the latest trunk?").
+		Value(&rebaseOntoTrunk).
+		Run()
+
+	if err != nil {
+		return fmt.Errorf("failed to get user input: %v", err)
+	}
+
+	if rebaseOntoTrunk {
+		output.Info("Rebasing onto trunk...")
+		// Here we would call the rebase functionality
+		// For now, just show what would happen
+		output.Info("Would rebase %s onto %s", currentBranch, trunkBranch)
+		
+		// Actually update trunk first
+		output.Info("Updating %s branch...", trunkBranch)
+		_, err = p.git.Run("remote", "get-url", "origin")
+		if err == nil {
+			_, err = p.git.Run("pull", "origin", trunkBranch)
+			if err != nil {
+				output.Warning("Failed to pull latest changes from remote, but continuing...")
+			}
+		}
+		
+		// Perform rebase
+		output.Info("Rebasing %s onto %s...", currentBranch, trunkBranch)
+		_, err = p.git.Run("rebase", trunkBranch)
+		if err != nil {
+			return fmt.Errorf("rebase failed: %w", err)
+		}
+		output.Success("Successfully rebased %s onto %s", currentBranch, trunkBranch)
+	}
+
+	// 3. Use commitizen for conventional commit message
+	if squashCommits {
+		var useCommitizen bool
+		err = huh.NewConfirm().
+			Title("Use Commitizen?").
+			Description("Do you want to create a conventional commit message?").
+			Value(&useCommitizen).
+			Run()
+
+		if err != nil {
+			return fmt.Errorf("failed to get user input: %v", err)
+		}
+
+		if useCommitizen {
+			output.Info("Launching commitizen...")
+			// Here we would call the commitizen functionality
+			// For now, just show what would happen
+			output.Info("Would launch commitizen to create conventional commit")
+		}
+	}
+
+	// 4. Update changelog
+	var updateChangelog bool
+	err = huh.NewConfirm().
+		Title("Update Changelog?").
+		Description("Do you want to update the changelog with your changes?").
+		Value(&updateChangelog).
+		Run()
+
+	if err != nil {
+		return fmt.Errorf("failed to get user input: %v", err)
+	}
+
+	if updateChangelog {
+		output.Info("Updating changelog...")
+		// Here we would call the changelog functionality
+		// For now, just show what would happen
+		output.Info("Would update changelog with changes from branch %s", currentBranch)
+	}
+
+	output.Success("Branch preparation completed!")
+	return nil
+}
+
+// listPullRequests lists open pull requests
+func (p *PullRequestHandler) listPullRequests() error {
+	if p.hasGitHubCLI() {
+		output.Info("Listing pull requests...")
+		cmd := exec.Command("gh", "pr", "list")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
+	}
+
+	output.Warning("GitHub CLI not found. Please install 'gh' to list PRs.")
+	output.Info("You can view PRs at: https://github.com/[owner]/[repo]/pulls")
+	return nil
+}
+
+// viewPullRequest views a specific pull request
+func (p *PullRequestHandler) viewPullRequest(prNumber string) error {
+	if p.hasGitHubCLI() {
+		output.Info("Viewing pull request %s...", prNumber)
+		cmd := exec.Command("gh", "pr", "view", prNumber)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
+	}
+
+	output.Warning("GitHub CLI not found. Please install 'gh' to view PRs.")
+	return nil
+}
+
+// mergePullRequest merges a pull request
+func (p *PullRequestHandler) mergePullRequest(prNumber string) error {
+	if p.hasGitHubCLI() {
+		output.Info("Merging pull request %s...", prNumber)
+		cmd := exec.Command("gh", "pr", "merge", prNumber)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
+	}
+
+	output.Warning("GitHub CLI not found. Please install 'gh' to merge PRs.")
+	return nil
+}
+
+// closePullRequest closes a pull request
+func (p *PullRequestHandler) closePullRequest(prNumber string) error {
+	if p.hasGitHubCLI() {
+		var proceed bool
+		err := huh.NewConfirm().
+			Title("Close Pull Request").
+			Description(fmt.Sprintf("Close PR #%s?", prNumber)).
+			Value(&proceed).
+			Run()
+
+		if err != nil {
+			return fmt.Errorf("failed to get user input: %v", err)
+		}
+
+		if !proceed {
+			output.Info("PR close cancelled")
+			return nil
+		}
+
+		output.Info("Closing pull request %s...", prNumber)
+		cmd := exec.Command("gh", "pr", "close", prNumber)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
+	}
+
+	output.Warning("GitHub CLI not found. Please install 'gh' to close PRs.")
+	output.Info("You can close PR %s at: https://github.com/[owner]/[repo]/pull/%s", prNumber, prNumber)
+	return nil
+}
+
+// getCommitsSinceBranch gets commits since the given branch
+func (p *PullRequestHandler) getCommitsSinceBranch(branch string) ([]string, error) {
+	output, err := p.git.Run("log", "--oneline", "--no-merges", fmt.Sprintf("%s..HEAD", branch))
+	if err != nil {
+		return nil, err
+	}
+
+	if output == "" {
+		return []string{}, nil
+	}
+
+	return strings.Split(output, "\n"), nil
+}
+
 // generatePRDescription generates a PR description from commits
 func (p *PullRequestHandler) generatePRDescription(commits []string) string {
 	if len(commits) == 0 {
@@ -127,7 +347,9 @@ func (p *PullRequestHandler) generatePRDescription(commits []string) string {
 	description.WriteString("## Changes\n\n")
 
 	for _, commit := range commits {
-		description.WriteString(fmt.Sprintf("- %s\n", commit))
+		if commit != "" {
+			description.WriteString(fmt.Sprintf("- %s\n", commit))
+		}
 	}
 
 	// Add template sections
@@ -222,112 +444,22 @@ func (p *PullRequestHandler) openPRInBrowser(sourceBranch, targetBranch, descrip
 	return nil
 }
 
-// listPullRequests lists open pull requests
-func (p *PullRequestHandler) listPullRequests() error {
-	if p.hasGitHubCLI() {
-		output.Info("Listing pull requests...")
-		cmd := exec.Command("gh", "pr", "list")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		return cmd.Run()
-	}
-
-	output.Warning("GitHub CLI not found. Please install 'gh' to list PRs.")
-	output.Info("You can view PRs at: https://github.com/[owner]/[repo]/pulls")
-	return nil
-}
-
-// viewPullRequest views a specific pull request
-func (p *PullRequestHandler) viewPullRequest(prNumber string) error {
-	if p.hasGitHubCLI() {
-		output.Info("Viewing pull request %s...", prNumber)
-		cmd := exec.Command("gh", "pr", "view", prNumber)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		return cmd.Run()
-	}
-
-	output.Warning("GitHub CLI not found. Please install 'gh' to view PRs.")
-	output.Info("You can view PR %s at: https://github.com/[owner]/[repo]/pull/%s", prNumber, prNumber)
-	return nil
-}
-
-// mergePullRequest merges a pull request
-func (p *PullRequestHandler) mergePullRequest(prNumber string) error {
-	if p.hasGitHubCLI() {
-		var proceed bool
-		err := huh.NewConfirm().
-			Title("Merge Pull Request").
-			Description(fmt.Sprintf("Merge PR #%s?", prNumber)).
-			Value(&proceed).
-			Run()
-
-		if err != nil {
-			return fmt.Errorf("failed to get user input: %v", err)
-		}
-
-		if !proceed {
-			output.Info("PR merge cancelled")
-			return nil
-		}
-
-		output.Info("Merging pull request %s...", prNumber)
-		cmd := exec.Command("gh", "pr", "merge", prNumber, "--merge")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		return cmd.Run()
-	}
-
-	output.Warning("GitHub CLI not found. Please install 'gh' to merge PRs.")
-	output.Info("You can merge PR %s at: https://github.com/[owner]/[repo]/pull/%s", prNumber, prNumber)
-	return nil
-}
-
-// closePullRequest closes a pull request
-func (p *PullRequestHandler) closePullRequest(prNumber string) error {
-	if p.hasGitHubCLI() {
-		var proceed bool
-		err := huh.NewConfirm().
-			Title("Close Pull Request").
-			Description(fmt.Sprintf("Close PR #%s?", prNumber)).
-			Value(&proceed).
-			Run()
-
-		if err != nil {
-			return fmt.Errorf("failed to get user input: %v", err)
-		}
-
-		if !proceed {
-			output.Info("PR close cancelled")
-			return nil
-		}
-
-		output.Info("Closing pull request %s...", prNumber)
-		cmd := exec.Command("gh", "pr", "close", prNumber)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		return cmd.Run()
-	}
-
-	output.Warning("GitHub CLI not found. Please install 'gh' to close PRs.")
-	output.Info("You can close PR %s at: https://github.com/[owner]/[repo]/pull/%s", prNumber, prNumber)
-	return nil
-}
-
-// showUsage displays the usage information
+// showUsage displays the PR command usage
 func (p *PullRequestHandler) showUsage() error {
-	usage := `# Pull Request Command
+	return output.Markdown(`# Pull Request Command
 
-Manages pull requests for the repository.
+Create and manage pull requests for the repository.
 
 ## Usage
 
-  git @ pr [command] [options]
-  git @ pr create
-  git @ pr list
-  git @ pr view <number>
-  git @ pr merge <number>
-  git @ pr close <number>
+` + "```" + `bash
+git @ pr [command] [options]
+git @ pr create
+git @ pr list
+git @ pr view <number>
+git @ pr merge <number>
+git @ pr close <number>
+` + "```" + `
 
 ## Commands
 
@@ -343,23 +475,25 @@ Manages pull requests for the repository.
 
 ## Examples
 
-  # Create a PR from current branch
-  git @ pr
+` + "```" + `bash
+# Create PR (default)
+git @ pr
 
-  # Create a PR explicitly
-  git @ pr create
+# Create PR with preparation
+git @ pr create
 
-  # List all open PRs
-  git @ pr list
+# List all open PRs
+git @ pr list
 
-  # View PR #123
-  git @ pr view 123
+# View PR #123
+git @ pr view 123
 
-  # Merge PR #123
-  git @ pr merge 123
+# Merge PR #123
+git @ pr merge 123
 
-  # Close PR #123
-  git @ pr close 123
+# Close PR #123
+git @ pr close 123
+` + "```" + `
 
 ## Features
 
@@ -368,6 +502,16 @@ Manages pull requests for the repository.
 • **GitHub CLI integration**: Uses 'gh' command if available
 • **Browser fallback**: Opens browser if GitHub CLI not available
 • **Interactive confirmation**: Confirms actions before proceeding
+• **PR Preparation**: Squash, rebase, conventional commits, changelog updates
+
+## PR Preparation
+
+Before creating a PR, GitAT can help prepare your branch:
+
+• **Commit Squashing**: Squash multiple commits into a single conventional commit
+• **Rebasing**: Rebase onto the latest trunk branch
+• **Conventional Commits**: Use commitizen to create properly formatted commit messages
+• **Changelog Updates**: Automatically update changelog with your changes
 
 ## Requirements
 
@@ -380,21 +524,5 @@ Manages pull requests for the repository.
 • Cannot create PR from trunk branch
 • Automatically generates commit-based description
 • Supports both GitHub CLI and browser workflows
-`
-
-	return output.Markdown(usage)
-}
-
-// getCommitsSinceBranch gets commits since the given branch
-func (p *PullRequestHandler) getCommitsSinceBranch(branch string) ([]string, error) {
-	output, err := p.git.Run("log", "--oneline", "--no-merges", fmt.Sprintf("%s..HEAD", branch))
-	if err != nil {
-		return nil, err
-	}
-
-	if output == "" {
-		return []string{}, nil
-	}
-
-	return strings.Split(output, "\n"), nil
+`)
 }

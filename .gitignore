@@ -17,6 +17,9 @@
 # Go workspace file
 go.work
 
+# Go build cache
+go-build-cache/
+
 # Build artifacts
 build/
 gitat

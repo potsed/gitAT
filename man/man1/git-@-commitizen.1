@@ -1,0 +1,144 @@
+.TH GIT-@-COMMITIZEN 1 "August 2025" "GitAT v1.1.0" "Git Workflow Management Tool"
+.SH NAME
+git-@-commitizen \- Create conventional commits with an interactive prompt
+.SH SYNOPSIS
+.B git @ commitizen
+[\fICOMMAND\fR] [\fIOPTIONS\fR]
+.br
+.B git @ cz
+[\fICOMMAND\fR] [\fIOPTIONS\fR]
+.SH DESCRIPTION
+.PP
+The \fBcommitizen\fR command creates conventional commits with an interactive prompt. It guides users through creating commits that follow the conventional commit specification.
+.PP
+The command is also available as \fBcz\fR for convenience.
+.SH COMMANDS
+.TP
+.B commit, c [message]
+Create a commit (with prompt if no message)
+.TP
+.B prompt
+Interactive prompt for conventional commit (default)
+.TP
+.B init
+Initialize commitizen configuration
+.TP
+.B config
+Configure commitizen settings
+.TP
+.B -h, --help
+Show help message
+.SH OPTIONS
+.PP
+No additional options beyond the commands listed above.
+.SH CONVENTIONAL COMMIT FORMAT
+.PP
+The interactive prompt guides users through creating commits that follow the conventional commit specification:
+.RS
+.nf
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+.fi
+.RE
+.SH COMMIT TYPES
+.TP
+.B feat
+A new feature (MINOR version bump)
+.TP
+.B fix
+A bug fix (PATCH version bump)
+.TP
+.B docs
+Documentation only changes
+.TP
+.B style
+Changes that do not affect the meaning of the code
+.TP
+.B refactor
+A code change that neither fixes a bug nor adds a feature
+.TP
+.B perf
+A code change that improves performance
+.TP
+.B test
+Adding missing tests or correcting existing tests
+.TP
+.B build
+Changes that affect the build system or external dependencies
+.TP
+.B ci
+Changes to our CI configuration files and scripts
+.TP
+.B chore
+Other changes that don't modify src or test files
+.TP
+.B revert
+Reverts a previous commit
+.SH EXAMPLES
+.PP
+Interactive commit prompt:
+.RS
+.nf
+git @ commitizen
+.fi
+.RE
+.PP
+Commit with direct message:
+.RS
+.nf
+git @ commitizen commit "feat: add new feature"
+.fi
+.RE
+.PP
+Initialize commitizen:
+.RS
+.nf
+git @ commitizen init
+.fi
+.RE
+.PP
+Configure settings:
+.RS
+.nf
+git @ commitizen config
+.fi
+.RE
+.SH FEATURES
+.PP
+The commitizen command includes several features:
+.RS
+.IP \(bu 2
+Interactive prompt for guided conventional commit creation
+.IP \(bu 2
+Validation to ensure commit messages follow the specification
+.IP \(bu 2
+Special handling for breaking changes
+.IP \(bu 2
+Optional scope for more detailed categorization
+.IP \(bu 2
+Support for detailed descriptions and references
+.RE
+.SH BEST PRACTICES
+.PP
+When using the commitizen command:
+.RS
+.IP \(bu 2
+Use present tense ("add feature" not "added feature")
+.IP \(bu 2
+Use imperative mood ("move cursor to..." not "moves cursor to...")
+.IP \(bu 2
+Limit the subject line to 72 characters
+.IP \(bu 2
+Reference issues and pull requests in the footer
+.IP \(bu 2
+Mark breaking changes with "!" after the type/scope
+.RE
+.SH SEE ALSO
+.PP
+.BR git-@ (1),
+.BR git-@-changelog (1),
+.BR git-@-rebase (1),
+.BR git (1)
