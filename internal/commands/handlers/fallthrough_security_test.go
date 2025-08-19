@@ -293,7 +293,7 @@ func TestFallthroughSecurity_ReservedCommandProtection(t *testing.T) {
 		"version", "help", "branch", "feature", "hotfix", "info",
 		"issue", "label", "pr", "product", "release", "save",
 		"squash", "sweep", "tag", "wip", "work", "changes",
-		"logz", "shasum", "id", "path", "master", "root", "ignore",
+		"logz", "shasum", "id", "path", "main", "master", "root", "ignore",
 	}
 
 	for _, cmd := range reservedCommands {

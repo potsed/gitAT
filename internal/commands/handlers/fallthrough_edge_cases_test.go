@@ -140,7 +140,7 @@ func TestFallthroughHandler_ReservedCommands(t *testing.T) {
 		"semver", "help", "sprout", "feature", "hotfix", "info", "issue",
 		"label", "pr", "product", "release", "save", "squash", "sweep",
 		"dub", "wip", "work", "changes", "logz", "shasum", "id", "path",
-		"master", "root", "ignore", "setup-local", "setup-remote", "security",
+		"main", "master", "root", "ignore", "setup-local", "setup-remote", "security",
 		"_go", "_label", "_id", "_path", "_trunk", "_security",
 		"-v", "--version", "-h", "--help",
 	}

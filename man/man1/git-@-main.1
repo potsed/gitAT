@@ -1,0 +1,101 @@
+.TH GIT-@-MAIN 1 "August 2025" "GitAT v1.1.0" "Git Workflow Management Tool"
+.SH NAME
+git-@-main \- Switch to trunk branches
+.SH SYNOPSIS
+.B git @ main
+[\fIOPTIONS\fR]
+.br
+.B git @ master
+[\fIOPTIONS\fR]
+.br
+.B git @ root
+[\fIOPTIONS\fR]
+.SH DESCRIPTION
+.PP
+The \fBmain\fR command switches to the trunk branch (typically 'main' or 'master') and pulls the latest changes. It provides a quick way to get back to the main development branch.
+.PP
+The \fBmaster\fR and \fBroot\fR commands are aliases for the \fBmain\fR command.
+.PP
+If you have uncommitted changes, the command will ask if you want to save them as WIP before switching.
+.SH OPTIONS
+.TP
+.B -h, --help
+Show help message
+.SH BEHAVIOR
+.PP
+The command follows this process:
+.IP 1. 4
+Determines the trunk branch:
+.RS
+.IP \(bu 2
+Checks GitAT configuration (\fBat.trunk\fR)
+.IP \(bu 2
+Falls back to \fBmain\fR if it exists
+.IP \(bu 2
+Falls back to \fBmaster\fR if \fBmain\fR doesn't exist
+.IP \(bu 2
+Shows error if neither exists
+.RE
+.IP 2. 4
+Checks for uncommitted changes and offers to save to WIP
+.IP 3. 4
+Switches to the trunk branch if not already on it
+.IP 4. 4
+Pulls latest changes from remote (if origin exists)
+.SH WIP FUNCTIONALITY
+.PP
+If uncommitted changes are detected, the command will prompt the user with:
+.RS
+.nf
+? Save changes to WIP? (y/N)
+.fi
+.RE
+.PP
+If the user answers yes, the changes are saved using the GitAT WIP functionality:
+.IP 1. 4
+Stages all changes (\fBgit add -A\fR)
+.IP 2. 4
+Creates a commit with message \fB[WIP] <current-branch>\fR
+.SH CONFIGURATION
+.PP
+To configure a specific trunk branch:
+.RS
+.nf
+git @ _trunk develop
+.fi
+.RE
+.SH EXAMPLES
+.PP
+Switch to trunk branch:
+.RS
+.nf
+git @ main
+.fi
+.RE
+.PP
+Switch to trunk branch (alternative):
+.RS
+.nf
+git @ master
+git @ root
+.fi
+.RE
+.SH SAFETY FEATURES
+.PP
+The command includes several safety features:
+.RS
+.IP \(bu 2
+Validates that the trunk branch exists before switching
+.IP \(bu 2
+Checks for uncommitted changes and offers to save them
+.IP \(bu 2
+Shows informative messages about current status
+.IP \(bu 2
+Gracefully handles missing remote repositories
+.RE
+.SH SEE ALSO
+.PP
+.BR git-@ (1),
+.BR git-@-_trunk (1),
+.BR git-@-wip (1),
+.BR git (1)
