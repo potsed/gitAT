@@ -134,7 +134,7 @@ func (m *Manager) Execute(command string, args []string) error {
 	case "path":
 		return m.utility.ExecutePath(args)
 	case "main", "master", "root":
-		return m.master.Execute(args)
+		return m.main.Execute(args)
 	default:
 		return m.fallthroughHandler.Execute(command, args)
 	}
