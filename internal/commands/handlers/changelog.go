@@ -218,6 +218,9 @@ func (c *ChangelogHandler) parseCommits(commits []string) map[string][]string {
 	categories["Build System"] = []string{}
 	categories["CI"] = []string{}
 	categories["Chores"] = []string{}
+	categories["Deprecations"] = []string{}
+	categories["Security"] = []string{}
+	categories["Removals"] = []string{}
 	categories["Other Changes"] = []string{}
 
 	for _, commit := range commits {
@@ -262,6 +265,12 @@ func (c *ChangelogHandler) parseCommit(commit string) (string, string) {
 		return "CI", strings.TrimPrefix(message, "ci:")
 	case strings.HasPrefix(message, "chore:"):
 		return "Chores", strings.TrimPrefix(message, "chore:")
+	case strings.HasPrefix(message, "deprecate:"):
+		return "Deprecations", strings.TrimPrefix(message, "deprecate:")
+	case strings.HasPrefix(message, "security:"):
+		return "Security", strings.TrimPrefix(message, "security:")
+	case strings.HasPrefix(message, "remove:"):
+		return "Removals", strings.TrimPrefix(message, "remove:")
 	default:
 		return "Other Changes", message
 	}
@@ -272,18 +281,48 @@ func (c *ChangelogHandler) formatChangelog(categories map[string][]string) strin
 	
 	builder.WriteString("# Changelog\n\n")
 	builder.WriteString("All notable changes to this project will be documented in this file.\n\n")
+	builder.WriteString("The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),\n")
+	builder.WriteString("and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n\n")
 	
 	date := time.Now().Format("2006-01-02")
 	builder.WriteString(fmt.Sprintf("## [Unreleased] - %s\n\n", date))
 	
-	// Categories in order
-	categoryOrder := []string{
-		"Features", "Bug Fixes", "Documentation", "Refactoring",
-		"Performance", "Tests", "Build System", "CI", "Chores", "Other Changes",
+	// Categories mapped to Keep a Changelog 1.1.0 standard
+	categoryMapping := map[string]string{
+		"Features":       "Added",
+		"Bug Fixes":      "Fixed",
+		"Documentation":  "Changed", // Documentation changes are typically considered changes to existing functionality
+		"Refactoring":    "Changed", // Refactoring is a change to existing functionality
+		"Performance":    "Changed", // Performance improvements are changes to existing functionality
+		"Tests":          "Changed", // Test improvements are changes to existing functionality
+		"Build System":   "Changed", // Build system changes are changes to existing functionality
+		"CI":             "Changed", // CI changes are changes to existing functionality
+		"Chores":         "Changed", // Chores are typically changes to existing functionality
+		"Other Changes":  "Changed", // Other changes are typically changes to existing functionality
 	}
 	
-	for _, category := range categoryOrder {
-		entries := categories[category]
+	// Standard Keep a Changelog categories in order
+	standardCategories := []string{"Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"}
+	
+	// Create a map to group entries by standard categories
+	standardEntries := make(map[string][]string)
+	for _, cat := range standardCategories {
+		standardEntries[cat] = []string{}
+	}
+	
+	// Map our categories to standard categories
+	for ourCategory, entries := range categories {
+		if standardCategory, exists := categoryMapping[ourCategory]; exists {
+			standardEntries[standardCategory] = append(standardEntries[standardCategory], entries...)
+		} else {
+			// Default to "Changed" for unmapped categories
+			standardEntries["Changed"] = append(standardEntries["Changed"], entries...)
+		}
+	}
+	
+	// Write entries in standard category order
+	for _, category := range standardCategories {
+		entries := standardEntries[category]
 		if len(entries) > 0 {
 			builder.WriteString(fmt.Sprintf("### %s\n\n", category))
 			for _, entry := range entries {
@@ -301,14 +340,42 @@ func (c *ChangelogHandler) formatReleaseEntry(version, date string, categories m
 	
 	builder.WriteString(fmt.Sprintf("## [%s] - %s\n\n", version, date))
 	
-	// Categories in order
-	categoryOrder := []string{
-		"Features", "Bug Fixes", "Documentation", "Refactoring",
-		"Performance", "Tests", "Build System", "CI", "Chores", "Other Changes",
+	// Categories mapped to Keep a Changelog 1.1.0 standard
+	categoryMapping := map[string]string{
+		"Features":       "Added",
+		"Bug Fixes":      "Fixed",
+		"Documentation":  "Changed", // Documentation changes are typically considered changes to existing functionality
+		"Refactoring":    "Changed", // Refactoring is a change to existing functionality
+		"Performance":    "Changed", // Performance improvements are changes to existing functionality
+		"Tests":          "Changed", // Test improvements are changes to existing functionality
+		"Build System":   "Changed", // Build system changes are changes to existing functionality
+		"CI":             "Changed", // CI changes are changes to existing functionality
+		"Chores":         "Changed", // Chores are typically changes to existing functionality
+		"Other Changes":  "Changed", // Other changes are typically changes to existing functionality
 	}
 	
-	for _, category := range categoryOrder {
-		entries := categories[category]
+	// Standard Keep a Changelog categories in order
+	standardCategories := []string{"Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"}
+	
+	// Create a map to group entries by standard categories
+	standardEntries := make(map[string][]string)
+	for _, cat := range standardCategories {
+		standardEntries[cat] = []string{}
+	}
+	
+	// Map our categories to standard categories
+	for ourCategory, entries := range categories {
+		if standardCategory, exists := categoryMapping[ourCategory]; exists {
+			standardEntries[standardCategory] = append(standardEntries[standardCategory], entries...)
+		} else {
+			// Default to "Changed" for unmapped categories
+			standardEntries["Changed"] = append(standardEntries["Changed"], entries...)
+		}
+	}
+	
+	// Write entries in standard category order
+	for _, category := range standardCategories {
+		entries := standardEntries[category]
 		if len(entries) > 0 {
 			builder.WriteString(fmt.Sprintf("### %s\n\n", category))
 			for _, entry := range entries {
