@@ -3,6 +3,8 @@ package handlers
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -70,19 +72,27 @@ func (c *ChangelogHandler) generateChangelog() error {
 	output.Title("Generated Changelog")
 	fmt.Println(changelog)
 
-	// Ask to save
-	var save bool
-	err = huh.NewConfirm().
-		Title("Save Changelog?").
-		Description("Save this changelog to CHANGELOG.md?").
-		Value(&save).
-		Run()
+	// Try to save automatically in non-interactive environments
+	// Check if we're in a non-interactive environment
+	if isInteractiveEnvironment() {
+		// Ask to save
+		var save bool
+		err = huh.NewConfirm().
+			Title("Save Changelog?").
+			Description("Save this changelog to CHANGELOG.md?").
+			Value(&save).
+			Run()
 
-	if err != nil {
-		return fmt.Errorf("failed to get user input: %w", err)
-	}
+		if err != nil {
+			return fmt.Errorf("failed to get user input: %w", err)
+		}
 
-	if save {
+		if save {
+			return c.saveChangelog(changelog)
+		}
+	} else {
+		// In non-interactive environments, save automatically
+		output.Info("Non-interactive environment detected. Saving changelog automatically.")
 		return c.saveChangelog(changelog)
 	}
 
@@ -312,8 +322,42 @@ func (c *ChangelogHandler) formatReleaseEntry(version, date string, categories m
 }
 
 func (c *ChangelogHandler) saveChangelog(content string) error {
-	// This would actually save to file
-	output.Success("Changelog would be saved to CHANGELOG.md")
+	// Actually save to file using standard Go file operations
+	filename := "CHANGELOG.md"
+	filePath := filepath.Join(c.git.Path, filename)
+	
+	// Check if file exists
+	if _, err := os.Stat(filePath); err == nil {
+		// File exists, read existing content
+		existingContent, err := os.ReadFile(filePath)
+		if err != nil {
+			return fmt.Errorf("failed to read existing changelog: %w", err)
+		}
+		
+		// If file starts with # Changelog, we need to merge content
+		if strings.HasPrefix(string(existingContent), "# Changelog") {
+			// For simplicity, we'll prepend our new content to the existing content
+			// but skip the header lines from our new content
+			lines := strings.Split(content, "\n")
+			if len(lines) > 3 {
+				// Skip first 3 lines (# Changelog, blank, and description)
+				newContent := strings.Join(lines[3:], "\n") + "\n" + string(existingContent)
+				content = newContent
+			}
+		} else {
+			// Prepend our content to existing content
+			content = content + "\n" + string(existingContent)
+		}
+	}
+	// If file doesn't exist, we'll create it with just our content
+	
+	// Write to file
+	err := os.WriteFile(filePath, []byte(content), 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write changelog: %w", err)
+	}
+	
+	output.Success("Changelog saved to %s", filename)
 	return nil
 }
 
@@ -363,4 +407,17 @@ git @ changelog release v1.2.0
 • **File Integration**: Reads from and writes to CHANGELOG.md
 • **Interactive Prompts**: Asks for confirmation before saving
 `)
+}
+
+// isInteractiveEnvironment checks if we're running in an interactive environment
+func isInteractiveEnvironment() bool {
+	// Check if stdin is a terminal
+	_, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	
+	// Check if we can access /dev/tty
+	_, err = os.Open("/dev/tty")
+	return err == nil
 }
