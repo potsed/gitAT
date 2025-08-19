@@ -8,10 +8,20 @@ import (
 	"github.com/potsed/gitAT/internal/config"
 )
 
+// Version information set at build time via ldflags
+var (
+	Version   = "unknown"
+	CommitHash = "unknown"
+	BuildDate  = "unknown"
+)
+
 // App represents the CLI application
 type App struct {
 	config *config.Config
 	cmds   *commands.Manager
+	version string
+	commitHash string
+	buildDate string
 }
 
 // NewApp creates a new CLI application
@@ -19,6 +29,9 @@ func NewApp(cfg *config.Config) *App {
 	return &App{
 		config: cfg,
 		cmds:   commands.NewManager(cfg),
+		version: Version,
+		commitHash: CommitHash,
+		buildDate: BuildDate,
 	}
 }
 
@@ -51,7 +64,6 @@ func (a *App) showUsage() error {
 
 Usage: git @ <command> [options]
 
-Commands:
   work <type> <description>    Create work branches following Conventional Commits
   hotfix <description>         Create hotfix branches for urgent fixes
   save "message"               Securely save changes with validation
@@ -67,23 +79,20 @@ Commands:
   semver                       Semantic versioning management
   dub                          Enhanced tag creation with version integration
   release                      Create releases with proper tagging
-  main, master, root           Switch to trunk branches (main/master)
+  master, root                 Switch to trunk branches (main/master)
   wip                          Work in progress management
   changes                      View uncommitted changes
   logz                         View commit history
-  _label                       Generate commit labels
-  _id                          Generate unique project identifiers
-  _path                        Get repository path
-  _trunk                       Manage trunk branch configuration
   ignore                       Add patterns to .gitignore
   setup-local                  Initialize local repository with branch structure
   setup-remote                 Initialize remote repository with basic structure
-  _security                    Security utilities and status
-  _go                          Initialize GitAT for current repository
+  changelog                    Generate and manage changelogs
+  rebase                       Rebase current branch onto another branch
+  commitizen, cz               Create conventional commits with interactive prompt
 
 Options:
   -h, --help                   Show this help message
-  -v, --version                Show version information
+  -v, --version                Show version information (GitAT {{VERSION}})
 
 Examples:
   git @ work feature add-user-authentication
@@ -104,12 +113,21 @@ GitAT includes comprehensive man pages:
   man git-@-logz   # Commit history
   man git-@-shasum # Branch status
   man git-@-main   # Switch to trunk branch
+  man git-@-changelog # Changelog management
+  man git-@-rebase    # Branch rebasing
+  man git-@-commitizen # Conventional commits
 `)
 	return nil
 }
 
 // showVersion displays the version information
 func (a *App) showVersion() error {
-	fmt.Fprintf(os.Stdout, "GitAT v1.1.0\n")
+	fmt.Fprintf(os.Stdout, "GitAT %s\n", a.version)
+	if a.commitHash != "unknown" {
+		fmt.Fprintf(os.Stdout, "Commit: %s\n", a.commitHash)
+	}
+	if a.buildDate != "unknown" {
+		fmt.Fprintf(os.Stdout, "Built: %s\n", a.buildDate)
+	}
 	return nil
 }

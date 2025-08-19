@@ -36,6 +36,9 @@ type Manager struct {
 	logz               *handlers.LogzHandler
 	shasum             *handlers.ShasumHandler
 	main               *handlers.MainHandler
+	changelog          *handlers.ChangelogHandler
+	rebase             *handlers.RebaseHandler
+	commitizen         *handlers.CommitizenHandler
 	fallthroughHandler *handlers.FallthroughHandler
 }
 
@@ -71,6 +74,9 @@ func NewManager(cfg *config.Config) *Manager {
 		logz:               handlers.NewLogzHandler(cfg, gitRepo),
 		shasum:             handlers.NewShasumHandler(cfg, gitRepo),
 		main:               handlers.NewMainHandler(cfg, gitRepo),
+		changelog:          handlers.NewChangelogHandler(cfg, gitRepo),
+		rebase:             handlers.NewRebaseHandler(cfg, gitRepo),
+		commitizen:         handlers.NewCommitizenHandler(cfg, gitRepo),
 		fallthroughHandler: handlers.NewFallthroughHandler(cfg, gitRepo),
 	}
 }
@@ -135,6 +141,12 @@ func (m *Manager) Execute(command string, args []string) error {
 		return m.utility.ExecutePath(args)
 	case "main", "master", "root":
 		return m.main.Execute(args)
+	case "changelog":
+		return m.changelog.Execute(args)
+	case "rebase":
+		return m.rebase.Execute(args)
+	case "commitizen", "cz":
+		return m.commitizen.Execute(args)
 	default:
 		return m.fallthroughHandler.Execute(command, args)
 	}

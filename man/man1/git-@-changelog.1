@@ -1,0 +1,119 @@
+.TH GIT-@-CHANGELOG 1 "August 2025" "GitAT v1.1.0" "Git Workflow Management Tool"
+.SH NAME
+git-@-changelog \- Generate and manage changelogs based on conventional commits
+.SH SYNOPSIS
+.B git @ changelog
+[\fICOMMAND\fR] [\fIOPTIONS\fR]
+.SH DESCRIPTION
+.PP
+The \fBchangelog\fR command generates and manages changelogs based on conventional commits. It automatically categorizes commits into appropriate sections based on their commit types.
+.PP
+The command follows the Keep a Changelog format (https://keepachangelog.com/en/1.0.0/) and integrates with conventional commit types for automatic categorization.
+.SH COMMANDS
+.TP
+.B generate, gen
+Generate a new changelog (default action)
+.TP
+.B update
+Update existing changelog
+.TP
+.B preview
+Show a preview without saving
+.TP
+.B release <version>
+Generate a release entry for specific version
+.TP
+.B -h, --help
+Show help message
+.SH OPTIONS
+.PP
+No additional options beyond the commands listed above.
+.SH CONVENTIONAL COMMIT CATEGORIES
+.PP
+Commits are automatically categorized based on conventional commit types:
+.RS
+.IP \(bu 2
+\fBfeat\fR: Features
+.IP \(bu 2
+\fBfix\fR: Bug Fixes
+.IP \(bu 2
+\fBdocs\fR: Documentation
+.IP \(bu 2
+\fBrefactor\fR: Code Refactoring
+.IP \(bu 2
+\fBperf\fR: Performance Improvements
+.IP \(bu 2
+\fBtest\fR: Tests
+.IP \(bu 2
+\fBbuild\fR: Build System
+.IP \(bu 2
+\fBci\fR: Continuous Integration
+.IP \(bu 2
+\fBchore\fR: Chores
+.IP \(bu 2
+\fBstyle\fR: Code Style
+.IP \(bu 2
+All other commits: Other Changes
+.RE
+.SH EXAMPLES
+.PP
+Generate changelog:
+.RS
+.nf
+git @ changelog
+.fi
+.RE
+.PP
+Update existing changelog:
+.RS
+.nf
+git @ changelog update
+.fi
+.RE
+.PP
+Preview changelog:
+.RS
+.nf
+git @ changelog preview
+.fi
+.RE
+.PP
+Generate release entry:
+.RS
+.nf
+git @ changelog release v1.2.0
+.fi
+.RE
+.SH FEATURES
+.PP
+The changelog command includes several features:
+.RS
+.IP \(bu 2
+Automatic commit categorization based on conventional commit types
+.IP \(bu 2
+Release management with properly formatted release entries
+.IP \(bu 2
+File integration with CHANGELOG.md
+.IP \(bu 2
+Interactive prompts for confirmation before saving
+.IP \(bu 2
+Flexible output modes (preview, generate, update)
+.RE
+.SH FILE FORMAT
+.PP
+Generated changelogs follow the Keep a Changelog format:
+.RS
+.IP \(bu 2
+Header with project information
+.IP \(bu 2
+[Unreleased] section for upcoming changes
+.IP \(bu 2
+Categorized sections for different commit types
+.IP \(bu 2
+Properly formatted release entries with dates
+.RE
+.SH SEE ALSO
+.PP
+.BR git-@ (1),
+.BR git-@-rebase (1),
+.BR git-@-commitizen (1)

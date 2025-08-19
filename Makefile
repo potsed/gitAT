@@ -8,7 +8,11 @@ BUILD_DIR=build
 VERSION=$(shell git describe --tags --always --dirty 2>/dev/null || echo "v1.1.0")
 COMMIT_HASH=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 BUILD_DATE=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
-LDFLAGS=-ldflags "-X main.Version=${VERSION} -X main.CommitHash=${COMMIT_HASH} -X main.BuildDate=${BUILD_DATE}"
+LDFLAGS=-ldflags "-X github.com/potsed/gitAT/pkg/cli.Version=${VERSION} -X github.com/potsed/gitAT/pkg/cli.CommitHash=${COMMIT_HASH} -X github.com/potsed/gitAT/pkg/cli.BuildDate=${BUILD_DATE}"
+
+# Set custom cache directory to avoid macOS permission issues
+GOCACHE_DIR=$(PWD)/go-build-cache
+export GOCACHE=$(GOCACHE_DIR)
 
 # Safeguard: Prevent building with deprecated binary name
 .PHONY: check-binary-name
@@ -76,7 +80,8 @@ clean:
 	@rm -rf $(BUILD_DIR)
 	@rm -f $(BINARY_NAME)
 	@rm -f $(DEPRECATED_BINARY_NAME)
-	@echo "✅ Cleaned all build artifacts including deprecated binaries"
+	@rm -rf $(GOCACHE_DIR)
+	@echo "✅ Cleaned all build artifacts including deprecated binaries and cache"
 
 # Run tests
 .PHONY: test

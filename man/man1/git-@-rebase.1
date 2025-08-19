@@ -1,0 +1,120 @@
+.TH GIT-@-REBASE 1 "August 2025" "GitAT v1.1.0" "Git Workflow Management Tool"
+.SH NAME
+git-@-rebase \- Rebase current branch onto another branch with enhanced options
+.SH SYNOPSIS
+.B git @ rebase
+[\fICOMMAND\fR] [\fIOPTIONS\fR]
+.SH DESCRIPTION
+.PP
+The \fBrebase\fR command rebases the current branch onto another branch with enhanced options and safety features. It provides a user-friendly interface for common rebase operations.
+.PP
+The command includes safety checks, automatic remote updates, and user confirmation for destructive operations.
+.SH COMMANDS
+.TP
+.B onto <branch>
+Rebase current branch onto specified branch
+.TP
+.B interactive, i [commit-range]
+Start interactive rebase (default: last 5 commits)
+.TP
+.B abort
+Abort current rebase operation
+.TP
+.B continue
+Continue current rebase operation
+.TP
+.B skip
+Skip current commit in rebase
+.TP
+.B -h, --help
+Show help message
+.SH OPTIONS
+.PP
+All standard git rebase options are supported and passed through to the underlying git command.
+.SH EXAMPLES
+.PP
+Rebase onto trunk branch:
+.RS
+.nf
+git @ rebase
+.fi
+.RE
+.PP
+Rebase onto specific branch:
+.RS
+.nf
+git @ rebase onto develop
+.fi
+.RE
+.PP
+Interactive rebase of last 3 commits:
+.RS
+.nf
+git @ rebase interactive HEAD~3
+.fi
+.RE
+.PP
+Rebase with git options:
+.RS
+.nf
+git @ rebase onto main --autosquash
+.fi
+.RE
+.PP
+Abort current rebase:
+.RS
+.nf
+git @ rebase abort
+.fi
+.RE
+.SH FEATURES
+.PP
+The rebase command includes several features:
+.RS
+.IP \(bu 2
+Trunk integration with automatic trunk branch detection
+.IP \(bu 2
+Safety checks to validate that branches exist before rebasing
+.IP \(bu 2
+Full support for interactive rebasing
+.IP \(bu 2
+Commands for conflict resolution (abort, continue, skip)
+.IP \(bu 2
+Automatic pulling of latest changes before rebasing
+.IP \(bu 2
+User confirmation for destructive operations
+.RE
+.SH BEST PRACTICES
+.PP
+When using the rebase command:
+.RS
+.IP \(bu 2
+Always rebase onto the latest trunk branch before creating PRs
+.IP \(bu 2
+Use interactive rebase to clean up commit history
+.IP \(bu 2
+Abort rebase if conflicts are too complex to resolve
+.IP \(bu 2
+Continue rebase after resolving conflicts
+.IP \(bu 2
+Skip commits that cause persistent conflicts
+.RE
+.SH WORKFLOW
+.PP
+The rebase command follows this workflow:
+.IP 1. 4
+Detect target branch (automatically or user-specified)
+.IP 2. 4
+Update target branch with latest changes from remote (if available)
+.IP 3. 4
+Confirm action with user
+.IP 4. 4
+Execute rebase with appropriate options
+.IP 5. 4
+Show results (success or error messages)
+.SH SEE ALSO
+.PP
+.BR git-@ (1),
+.BR git-@-changelog (1),
+.BR git-@-commitizen (1),
+.BR git (1)

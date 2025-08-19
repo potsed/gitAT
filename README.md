@@ -16,12 +16,13 @@ GitAT (`git @`) is a powerful command-line tool that extends Git with workflow m
 - `git @ squash [branch]` - Squash commits with auto-detection of parent branch
 - `git @ pr [options]` - Create Pull Requests with auto-description generation
 
-### 🌿 **Branch Management**
+### 🔄 **Branch Management**
 
 - `git @ branch` - Manage working branch configuration
 - `git @ sweep` - Clean up local branches (merged + remote-deleted)
-- `git @ master` / `git @ root` - Switch to trunk branches
+- `git @ main, master, root` - Switch to trunk branches
 - `git @ wip` - Work in progress management
+- `git @ rebase` - Rebase current branch onto another branch
 
 ### 📊 **Information & Status**
 
@@ -29,6 +30,7 @@ GitAT (`git @`) is a powerful command-line tool that extends Git with workflow m
 - `git @ shasum` - Detailed branch status and commit relationships
 - `git @ changes` - View uncommitted changes
 - `git @ logz` - View commit history
+- `git @ changelog` - Generate and manage changelogs
 
 ### 🏷️ **Version Management**
 
@@ -140,6 +142,14 @@ GitAT follows the [Conventional Commits](https://www.conventionalcommits.org/) s
 - `chore:` - Maintenance tasks
 - `hotfix:` - Urgent fixes
 
+### Enhanced Conventional Commit Tools
+
+GitAT provides additional tools to work with conventional commits:
+
+- `git @ commitizen` - Interactive prompt for creating conventional commits
+- `git @ changelog` - Generate changelogs from conventional commit history
+- `git @ label` - Generate commit labels based on branch types
+
 ## Examples
 
 ### Creating Different Work Types
@@ -167,6 +177,34 @@ git @ pr -s                        # Create PR with auto-squashing
 git @ pr --title "Custom Title"    # Create PR with custom title
 ```
 
+### Creating Conventional Commits
+
+```bash
+git @ commitizen                   # Interactive conventional commit
+git @ cz                           # Short alias for commitizen
+```
+
+### Managing Changelogs
+
+```bash
+git @ changelog                    # Generate changelog
+git @ changelog update             # Update existing changelog
+git @ changelog preview            # Preview without saving
+```
+
+
+### 🛠️ **Advanced Workflow Commands**
+
+```bash
+git @ rebase                       # Rebase onto trunk branch
+git @ rebase onto <branch>         # Rebase onto specific branch
+git @ rebase interactive            # Interactive rebase
+git @ commitizen                   # Interactive conventional commit
+git @ cz                           # Short alias for commitizen
+git @ changelog                    # Generate changelog
+git @ changelog update             # Update existing changelog
+git @ changelog preview             # Preview without saving
+```
 ### Cleaning Up Branches
 
 ```bash
